@@ -1,4 +1,6 @@
 export type PrayerName = "Fajr" | "Dhuhr" | "Asr" | "Maghrib" | "Isha";
+export type AdvancedPrayerName = "Tahajjud" | "Ishraq" | "Chasht" | "Awwabin";
+export type AllPrayerName = PrayerName | AdvancedPrayerName;
 export type PrayerStatus = "unmarked" | "single" | "jamaat" | "qaza";
 export type TabName =
   | "home"
@@ -16,6 +18,7 @@ export interface PrayerTime {
 export interface DailyLog {
   date: string; // "YYYY-MM-DD"
   prayers: Record<PrayerName, PrayerStatus>;
+  advancedPrayers?: Record<AdvancedPrayerName, PrayerStatus>;
 }
 
 export interface QazaEntry {
@@ -43,6 +46,7 @@ export interface GracePeriodEntry {
 
 export interface AppState {
   prayerTimes: Record<PrayerName, string>;
+  advancedPrayerTimes: Record<AdvancedPrayerName, string>;
   dailyLog: DailyLog | null;
   qazaVault: QazaEntry[];
   adaaRecords: AdaaRecord[];
@@ -51,6 +55,7 @@ export interface AppState {
   profileName: string;
   isNormalMode: boolean;
   monthlyHistory: Record<string, DailyLog>;
+  tasbihs: Record<string, number>; // date -> count
 }
 
 export interface ToastMessage {

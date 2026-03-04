@@ -40,7 +40,7 @@ export function getHijriDate(date?: Date): HijriDate {
   const y = year + 4800 - a;
   const m = month + 12 * a - 3;
 
-  // Julian Day Number; subtract 1 to align with actual moon-sighting based Hijri calendar
+  // Julian Day Number; subtract 2 to align with India/Pakistan moon-sighting based Hijri calendar
   let jdn =
     day +
     Math.floor((153 * m + 2) / 5) +
@@ -49,7 +49,7 @@ export function getHijriDate(date?: Date): HijriDate {
     Math.floor(y / 100) +
     Math.floor(y / 400) -
     32045 -
-    1;
+    2;
 
   // Convert JDN to Hijri
   const l = jdn - 1948440 + 10632;

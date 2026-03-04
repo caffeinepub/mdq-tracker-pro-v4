@@ -1,6 +1,7 @@
 import { useCallback, useState } from "react";
 import type {
   AdaaRecord,
+  AdvancedPrayerName,
   AppState,
   DailyLog,
   GracePeriodEntry,
@@ -10,6 +11,12 @@ import type {
 } from "../types";
 
 const PRAYER_NAMES: PrayerName[] = ["Fajr", "Dhuhr", "Asr", "Maghrib", "Isha"];
+const _ADVANCED_PRAYER_NAMES: AdvancedPrayerName[] = [
+  "Tahajjud",
+  "Ishraq",
+  "Chasht",
+  "Awwabin",
+];
 
 const DEFAULT_PRAYER_TIMES: Record<PrayerName, string> = {
   Fajr: "05:00",
@@ -17,6 +24,13 @@ const DEFAULT_PRAYER_TIMES: Record<PrayerName, string> = {
   Asr: "16:30",
   Maghrib: "19:00",
   Isha: "20:30",
+};
+
+const DEFAULT_ADVANCED_PRAYER_TIMES: Record<AdvancedPrayerName, string> = {
+  Tahajjud: "03:00",
+  Ishraq: "06:30",
+  Chasht: "09:00",
+  Awwabin: "21:00",
 };
 
 const DEFAULT_PRAYERS: Record<PrayerName, PrayerStatus> = {
@@ -27,8 +41,16 @@ const DEFAULT_PRAYERS: Record<PrayerName, PrayerStatus> = {
   Isha: "unmarked",
 };
 
+const DEFAULT_ADVANCED_PRAYERS: Record<AdvancedPrayerName, PrayerStatus> = {
+  Tahajjud: "unmarked",
+  Ishraq: "unmarked",
+  Chasht: "unmarked",
+  Awwabin: "unmarked",
+};
+
 const STORAGE_KEYS = {
   prayerTimes: "mdq_prayer_times",
+  advancedPrayerTimes: "mdq_advanced_prayer_times",
   dailyLog: "mdq_daily_log",
   qazaVault: "mdq_qaza_vault",
   adaaRecords: "mdq_adaa_records",
@@ -37,6 +59,7 @@ const STORAGE_KEYS = {
   profileName: "mdq_profile_name",
   isNormalMode: "mdq_is_normal_mode",
   monthlyHistory: "mdq_monthly_history",
+  tasbihs: "mdq_tasbihs",
 };
 
 function getToday(): string {
@@ -68,6 +91,9 @@ function initState(): AppState {
     STORAGE_KEYS.prayerTimes,
     DEFAULT_PRAYER_TIMES,
   );
+  const advancedPrayerTimes = loadFromStorage<
+    Record<AdvancedPrayerName, string>
+  >(STORAGE_KEYS.advancedPrayerTimes, DEFAULT_ADVANCED_PRAYER_TIMES);
   const savedDailyLog = loadFromStorage<AppState["dailyLog"]>(
     STORAGE_KEYS.dailyLog,
     null,
@@ -93,15 +119,30 @@ function initState(): AppState {
     STORAGE_KEYS.monthlyHistory,
     {},
   );
+  const tasbihs = loadFromStorage<Record<string, number>>(
+    STORAGE_KEYS.tasbihs,
+    {},
+  );
 
   // Initialize daily log for today if needed
   let dailyLog = savedDailyLog;
   if (!dailyLog || dailyLog.date !== today) {
-    dailyLog = { date: today, prayers: { ...DEFAULT_PRAYERS } };
+    dailyLog = {
+      date: today,
+      prayers: { ...DEFAULT_PRAYERS },
+      advancedPrayers: { ...DEFAULT_ADVANCED_PRAYERS },
+    };
+  } else if (!dailyLog.advancedPrayers) {
+    // Migration: add advancedPrayers if missing
+    dailyLog = {
+      ...dailyLog,
+      advancedPrayers: { ...DEFAULT_ADVANCED_PRAYERS },
+    };
   }
 
   return {
     prayerTimes,
+    advancedPrayerTimes,
     dailyLog,
     qazaVault,
     adaaRecords,
@@ -110,6 +151,7 @@ function initState(): AppState {
     profileName,
     isNormalMode,
     monthlyHistory,
+    tasbihs,
   };
 }
 
@@ -121,6 +163,7 @@ export function useAppState() {
     setStateRaw((prev) => {
       const next = updater(prev);
       saveToStorage(STORAGE_KEYS.prayerTimes, next.prayerTimes);
+      saveToStorage(STORAGE_KEYS.advancedPrayerTimes, next.advancedPrayerTimes);
       saveToStorage(STORAGE_KEYS.dailyLog, next.dailyLog);
       saveToStorage(STORAGE_KEYS.qazaVault, next.qazaVault);
       saveToStorage(STORAGE_KEYS.adaaRecords, next.adaaRecords);
@@ -129,6 +172,7 @@ export function useAppState() {
       saveToStorage(STORAGE_KEYS.profileName, next.profileName);
       saveToStorage(STORAGE_KEYS.isNormalMode, next.isNormalMode);
       saveToStorage(STORAGE_KEYS.monthlyHistory, next.monthlyHistory);
+      saveToStorage(STORAGE_KEYS.tasbihs, next.tasbihs);
       return next;
     });
   }, []);
@@ -201,7 +245,11 @@ export function useAppState() {
 
       const next: AppState = {
         ...prev,
-        dailyLog: { date: today, prayers: { ...DEFAULT_PRAYERS } },
+        dailyLog: {
+          date: today,
+          prayers: { ...DEFAULT_PRAYERS },
+          advancedPrayers: { ...DEFAULT_ADVANCED_PRAYERS },
+        },
         gracePeriod: stillGrace,
         qazaVault: newQazaVault,
         lastResetDate: today,
@@ -274,9 +322,10 @@ export function useAppState() {
         const currentLog = prev.dailyLog ?? {
           date: today,
           prayers: { ...DEFAULT_PRAYERS },
+          advancedPrayers: { ...DEFAULT_ADVANCED_PRAYERS },
         };
         const newPrayers = { ...currentLog.prayers, [prayerName]: status };
-        const newLog = { date: today, prayers: newPrayers };
+        const newLog = { ...currentLog, date: today, prayers: newPrayers };
         const newQazaVault = [...prev.qazaVault];
 
         if (status === "qaza") {
@@ -298,6 +347,27 @@ export function useAppState() {
         }
 
         return { ...prev, dailyLog: newLog, qazaVault: newQazaVault };
+      });
+    },
+    [setState],
+  );
+
+  // Mark an advanced (nafl) prayer
+  const markAdvancedPrayer = useCallback(
+    (prayerName: AdvancedPrayerName, status: "single" | "jamaat") => {
+      const today = getToday();
+      setState((prev) => {
+        const currentLog = prev.dailyLog ?? {
+          date: today,
+          prayers: { ...DEFAULT_PRAYERS },
+          advancedPrayers: { ...DEFAULT_ADVANCED_PRAYERS },
+        };
+        const newAdvanced = {
+          ...(currentLog.advancedPrayers ?? DEFAULT_ADVANCED_PRAYERS),
+          [prayerName]: status,
+        };
+        const newLog = { ...currentLog, advancedPrayers: newAdvanced };
+        return { ...prev, dailyLog: newLog };
       });
     },
     [setState],
@@ -402,15 +472,36 @@ export function useAppState() {
     [setState],
   );
 
+  // Increment tasbih counter for today
+  const incrementTasbih = useCallback(() => {
+    const today = getToday();
+    setState((prev) => {
+      const current = prev.tasbihs[today] ?? 0;
+      return { ...prev, tasbihs: { ...prev.tasbihs, [today]: current + 1 } };
+    });
+  }, [setState]);
+
+  // Reset tasbih counter for today
+  const resetTasbih = useCallback(() => {
+    const today = getToday();
+    setState((prev) => ({
+      ...prev,
+      tasbihs: { ...prev.tasbihs, [today]: 0 },
+    }));
+  }, [setState]);
+
   return {
     state,
     checkMidnightReset,
     checkExpiredGrace,
     markPrayer,
+    markAdvancedPrayer,
     resolveQaza,
     markGracePrayer,
     convertExpiredGraceToQaza,
     updatePrayerTimes,
     updateProfile,
+    incrementTasbih,
+    resetTasbih,
   };
 }

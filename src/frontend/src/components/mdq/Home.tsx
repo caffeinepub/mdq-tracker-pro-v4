@@ -1,13 +1,26 @@
-import type { AppState, PrayerName, PrayerStatus } from "../../types";
+import type {
+  AdvancedPrayerName,
+  AppState,
+  PrayerName,
+  PrayerStatus,
+} from "../../types";
 import { getHijriDate, toArabicIndic } from "../../utils/hijri";
+import { AdvancedPrayerCard } from "./AdvancedPrayerCard";
 import { CircularProgress } from "./CircularProgress";
 import { PrayerCard } from "./PrayerCard";
+import { TasbiHCounter } from "./TasbiHCounter";
 
 const PRAYER_NAMES: PrayerName[] = ["Fajr", "Dhuhr", "Asr", "Maghrib", "Isha"];
 
 interface HomeProps {
   state: AppState;
   onMark: (name: PrayerName, status: PrayerStatus) => void;
+  onMarkAdvanced: (
+    name: AdvancedPrayerName,
+    status: "single" | "jamaat",
+  ) => void;
+  onIncrementTasbih: () => void;
+  onResetTasbih: () => void;
 }
 
 function formatDate(dateStr: string): string {
@@ -28,7 +41,13 @@ function getGreeting(): string {
   return "Assalamu Alaikum 🌙";
 }
 
-export function Home({ state, onMark }: HomeProps) {
+export function Home({
+  state,
+  onMark,
+  onMarkAdvanced,
+  onIncrementTasbih,
+  onResetTasbih,
+}: HomeProps) {
   const today = new Date().toISOString().slice(0, 10);
   const prayers = state.dailyLog?.prayers ?? {
     Fajr: "unmarked",
@@ -38,12 +57,24 @@ export function Home({ state, onMark }: HomeProps) {
     Isha: "unmarked",
   };
 
+  const advancedPrayers = state.dailyLog?.advancedPrayers ?? {
+    Tahajjud: "unmarked",
+    Ishraq: "unmarked",
+    Chasht: "unmarked",
+    Awwabin: "unmarked",
+  };
+
   const jamaatCount = PRAYER_NAMES.filter(
     (p) => prayers[p] === "jamaat",
   ).length;
   const markedCount = PRAYER_NAMES.filter(
     (p) => prayers[p] !== "unmarked",
   ).length;
+
+  const todayTasbih = state.tasbihs?.[today] ?? 0;
+
+  // isNormalMode = true means NORMAL mode (toggle ON = Normal, toggle OFF = Advanced)
+  const isAdvancedMode = !state.isNormalMode;
 
   return (
     <div className="space-y-4">
@@ -153,8 +184,37 @@ export function Home({ state, onMark }: HomeProps) {
         </div>
       </div>
 
-      {/* Prayer Cards */}
+      {/* Tasbih Counter */}
+      <TasbiHCounter
+        count={todayTasbih}
+        onIncrement={onIncrementTasbih}
+        onReset={onResetTasbih}
+      />
+
+      {/* Farz Prayer Cards */}
       <div className="space-y-3">
+        <div className="flex items-center gap-2 px-1">
+          <div
+            className="h-px flex-1"
+            style={{
+              background:
+                "linear-gradient(90deg, rgba(212,175,55,0.3), transparent)",
+            }}
+          />
+          <p
+            className="text-[10px] font-semibold uppercase tracking-[0.2em]"
+            style={{ color: "rgba(212,175,55,0.5)" }}
+          >
+            🕌 Farz Namazein
+          </p>
+          <div
+            className="h-px flex-1"
+            style={{
+              background:
+                "linear-gradient(270deg, rgba(212,175,55,0.3), transparent)",
+            }}
+          />
+        </div>
         {PRAYER_NAMES.map((name, i) => (
           <PrayerCard
             key={name}
@@ -166,6 +226,61 @@ export function Home({ state, onMark }: HomeProps) {
           />
         ))}
       </div>
+
+      {/* Advanced Mode — Nafl Prayers */}
+      {isAdvancedMode && (
+        <div className="space-y-3">
+          <div className="flex items-center gap-2 px-1 mt-2">
+            <div
+              className="h-px flex-1"
+              style={{
+                background:
+                  "linear-gradient(90deg, rgba(16,185,129,0.3), transparent)",
+              }}
+            />
+            <p
+              className="text-[10px] font-semibold uppercase tracking-[0.2em]"
+              style={{ color: "rgba(16,185,129,0.6)" }}
+            >
+              ✨ Nafl Namazein — Advanced Mode
+            </p>
+            <div
+              className="h-px flex-1"
+              style={{
+                background:
+                  "linear-gradient(270deg, rgba(16,185,129,0.3), transparent)",
+              }}
+            />
+          </div>
+
+          {/* Advanced prayer info banner */}
+          <div
+            className="rounded-xl px-4 py-3 text-center"
+            style={{
+              background: "rgba(16,185,129,0.05)",
+              border: "1px solid rgba(16,185,129,0.12)",
+            }}
+          >
+            <p className="text-[10px] text-white/35 leading-relaxed">
+              Yeh namazein nafl hain — inhe padhna sawab ka bais hai. Advanced
+              Mode mein active hain.
+            </p>
+          </div>
+
+          {(
+            ["Tahajjud", "Ishraq", "Chasht", "Awwabin"] as AdvancedPrayerName[]
+          ).map((name, i) => (
+            <AdvancedPrayerCard
+              key={name}
+              name={name}
+              time={state.advancedPrayerTimes[name]}
+              status={advancedPrayers[name] ?? "unmarked"}
+              onMark={onMarkAdvanced}
+              index={i}
+            />
+          ))}
+        </div>
+      )}
 
       {/* Motivational footer */}
       <div className="text-center py-4">

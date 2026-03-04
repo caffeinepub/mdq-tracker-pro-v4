@@ -10,7 +10,12 @@ import { QazaVault } from "./components/mdq/QazaVault";
 import { Settings } from "./components/mdq/Settings";
 import { Toast } from "./components/mdq/Toast";
 import { useAppState } from "./hooks/useAppState";
-import type { PrayerName, PrayerStatus, TabName } from "./types";
+import type {
+  AdvancedPrayerName,
+  PrayerName,
+  PrayerStatus,
+  TabName,
+} from "./types";
 
 function getMaleVoice(): SpeechSynthesisVoice | null {
   const voices = window.speechSynthesis.getVoices();
@@ -85,11 +90,14 @@ export default function App() {
     checkMidnightReset,
     checkExpiredGrace,
     markPrayer,
+    markAdvancedPrayer,
     resolveQaza,
     markGracePrayer,
     convertExpiredGraceToQaza,
     updatePrayerTimes,
     updateProfile,
+    incrementTasbih,
+    resetTasbih,
   } = useAppState();
 
   // Register service worker
@@ -177,12 +185,29 @@ export default function App() {
     [convertExpiredGraceToQaza, showToast],
   );
 
+  const handleMarkAdvanced = useCallback(
+    (name: AdvancedPrayerName, status: "single" | "jamaat") => {
+      markAdvancedPrayer(name, status);
+      speak("Alhamdulillah");
+      showToast(`MaashaAllah! ${name} ada ho gayi. Allah Qabool Farmaye. 🤲`);
+    },
+    [markAdvancedPrayer, showToast],
+  );
+
   const graceBadge = state.gracePeriod.length;
 
   const renderTab = () => {
     switch (activeTab) {
       case "home":
-        return <Home state={state} onMark={handleMarkPrayer} />;
+        return (
+          <Home
+            state={state}
+            onMark={handleMarkPrayer}
+            onMarkAdvanced={handleMarkAdvanced}
+            onIncrementTasbih={incrementTasbih}
+            onResetTasbih={resetTasbih}
+          />
+        );
       case "qaza":
         return (
           <QazaVault entries={state.qazaVault} onResolve={handleResolveQaza} />

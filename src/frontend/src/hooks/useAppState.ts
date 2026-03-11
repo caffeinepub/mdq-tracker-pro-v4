@@ -3,6 +3,7 @@ import type {
   AdaaRecord,
   AdvancedPrayerName,
   AppState,
+  BlogArticle,
   DailyLog,
   GracePeriodEntry,
   PrayerName,
@@ -60,6 +61,7 @@ const STORAGE_KEYS = {
   isNormalMode: "mdq_is_normal_mode",
   monthlyHistory: "mdq_monthly_history",
   tasbihs: "mdq_tasbihs",
+  blogArticles: "mdq_blog_articles",
 };
 
 function getToday(): string {
@@ -123,6 +125,10 @@ function initState(): AppState {
     STORAGE_KEYS.tasbihs,
     {},
   );
+  const blogArticles = loadFromStorage<BlogArticle[]>(
+    STORAGE_KEYS.blogArticles,
+    [],
+  );
 
   // Initialize daily log for today if needed
   let dailyLog = savedDailyLog;
@@ -152,6 +158,7 @@ function initState(): AppState {
     isNormalMode,
     monthlyHistory,
     tasbihs,
+    blogArticles,
   };
 }
 
@@ -173,6 +180,7 @@ export function useAppState() {
       saveToStorage(STORAGE_KEYS.isNormalMode, next.isNormalMode);
       saveToStorage(STORAGE_KEYS.monthlyHistory, next.monthlyHistory);
       saveToStorage(STORAGE_KEYS.tasbihs, next.tasbihs);
+      saveToStorage(STORAGE_KEYS.blogArticles, next.blogArticles);
       return next;
     });
   }, []);
@@ -464,6 +472,14 @@ export function useAppState() {
     [setState],
   );
 
+  // Update advanced prayer times
+  const updateAdvancedPrayerTimes = useCallback(
+    (times: Record<AdvancedPrayerName, string>) => {
+      setState((prev) => ({ ...prev, advancedPrayerTimes: times }));
+    },
+    [setState],
+  );
+
   // Update profile
   const updateProfile = useCallback(
     (name: string, isNormalMode: boolean) => {
@@ -490,6 +506,14 @@ export function useAppState() {
     }));
   }, [setState]);
 
+  // Update blog articles
+  const updateBlogArticles = useCallback(
+    (articles: BlogArticle[]) => {
+      setState((prev) => ({ ...prev, blogArticles: articles }));
+    },
+    [setState],
+  );
+
   return {
     state,
     checkMidnightReset,
@@ -500,8 +524,10 @@ export function useAppState() {
     markGracePrayer,
     convertExpiredGraceToQaza,
     updatePrayerTimes,
+    updateAdvancedPrayerTimes,
     updateProfile,
     incrementTasbih,
     resetTasbih,
+    updateBlogArticles,
   };
 }

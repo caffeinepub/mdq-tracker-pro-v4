@@ -56,7 +56,6 @@ export function Home({
     Maghrib: "unmarked",
     Isha: "unmarked",
   };
-
   const advancedPrayers = state.dailyLog?.advancedPrayers ?? {
     Tahajjud: "unmarked",
     Ishraq: "unmarked",
@@ -70,113 +69,165 @@ export function Home({
   const markedCount = PRAYER_NAMES.filter(
     (p) => prayers[p] !== "unmarked",
   ).length;
-
   const todayTasbih = state.tasbihs?.[today] ?? 0;
-
-  // isNormalMode = true means NORMAL mode (toggle ON = Normal, toggle OFF = Advanced)
   const isAdvancedMode = !state.isNormalMode;
+  const hijri = getHijriDate();
 
   return (
     <div className="space-y-4">
       {/* Premium Date & Greeting Card */}
-      {(() => {
-        const hijri = getHijriDate();
-        return (
-          <div
-            className="glass-premium rounded-2xl p-5"
-            style={{
-              border: "1px solid rgba(212,175,55,0.25)",
-              boxShadow:
-                "0 8px 32px rgba(212,175,55,0.08), 0 2px 8px rgba(0,0,0,0.3)",
-            }}
-          >
-            {/* Gregorian date — small, uppercase */}
-            <p className="text-[10px] text-white/35 uppercase tracking-[0.3em] text-center mb-3">
-              {formatDate(today)}
-            </p>
+      <div
+        className="rounded-2xl p-5"
+        style={{
+          background:
+            "linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)",
+          boxShadow:
+            "0 8px 32px rgba(0,0,0,0.15), 0 0 0 1px rgba(212,175,55,0.15)",
+          position: "relative",
+          overflow: "hidden",
+        }}
+      >
+        {/* Subtle background glow */}
+        <div
+          style={{
+            position: "absolute",
+            top: "-20%",
+            right: "-10%",
+            width: "180px",
+            height: "180px",
+            borderRadius: "50%",
+            background:
+              "radial-gradient(circle, rgba(212,175,55,0.12) 0%, transparent 70%)",
+            pointerEvents: "none",
+          }}
+        />
 
-            {/* Gold divider */}
-            <div
-              style={{
-                height: "1px",
-                background:
-                  "linear-gradient(90deg, transparent, rgba(212,175,55,0.35), transparent)",
-                marginBottom: "14px",
-              }}
-            />
+        {/* Gregorian date */}
+        <p
+          className="text-[10px] uppercase tracking-[0.3em] text-center mb-3"
+          style={{
+            color: "rgba(255,255,255,0.4)",
+            fontFamily: "'Poppins', sans-serif",
+          }}
+        >
+          {formatDate(today)}
+        </p>
 
-            {/* Hijri Arabic — BIG & prominent */}
-            <p
-              className="text-center shimmer-gold mb-1"
-              style={{
-                fontSize: "2rem",
-                fontFamily:
-                  "'Georgia', 'Palatino Linotype', 'Times New Roman', serif",
-                fontWeight: "700",
-                direction: "rtl",
-                lineHeight: "1.7",
-                textShadow:
-                  "0 0 24px rgba(212,175,55,0.4), 0 0 48px rgba(212,175,55,0.15)",
-                letterSpacing: "0.04em",
-              }}
-            >
-              {toArabicIndic(hijri.day)} {hijri.monthArabic}{" "}
-              {toArabicIndic(hijri.year)}
-            </p>
+        {/* Gold divider */}
+        <div
+          style={{
+            height: "1px",
+            background:
+              "linear-gradient(90deg, transparent, rgba(212,175,55,0.35), transparent)",
+            marginBottom: "14px",
+          }}
+        />
 
-            {/* Hijri Roman Urdu */}
-            <p
-              className="text-center text-sm font-semibold mb-4"
-              style={{
-                color: "rgba(212,175,55,0.65)",
-                letterSpacing: "0.05em",
-              }}
-            >
-              {hijri.day} {hijri.monthUrdu} {hijri.year} AH
-            </p>
+        {/* Hijri Arabic -- BIG */}
+        <p
+          className="text-center shimmer-gold mb-1"
+          style={{
+            fontSize: "2rem",
+            fontFamily: "'Amiri', 'Georgia', serif",
+            fontWeight: "700",
+            direction: "rtl",
+            lineHeight: "1.7",
+            textShadow: "0 0 24px rgba(212,175,55,0.4)",
+            letterSpacing: "0.04em",
+          }}
+        >
+          {toArabicIndic(hijri.day)} {hijri.monthArabic}{" "}
+          {toArabicIndic(hijri.year)}
+        </p>
 
-            {/* Gold divider */}
-            <div
-              style={{
-                height: "1px",
-                background:
-                  "linear-gradient(90deg, transparent, rgba(212,175,55,0.2), transparent)",
-                marginBottom: "12px",
-              }}
-            />
+        {/* Hijri Roman Urdu */}
+        <p
+          className="text-center text-sm font-semibold mb-4"
+          style={{
+            color: "rgba(212,175,55,0.7)",
+            letterSpacing: "0.05em",
+            fontFamily: "'Poppins', sans-serif",
+          }}
+        >
+          {hijri.day} {hijri.monthUrdu} {hijri.year} AH
+        </p>
 
-            {/* Greeting */}
-            <p className="text-center text-sm font-medium text-white/70 tracking-wide">
-              {getGreeting()}
-            </p>
-          </div>
-        );
-      })()}
+        <div
+          style={{
+            height: "1px",
+            background:
+              "linear-gradient(90deg, transparent, rgba(212,175,55,0.2), transparent)",
+            marginBottom: "12px",
+          }}
+        />
+
+        {/* Greeting */}
+        <p
+          className="text-center text-sm font-medium tracking-wide"
+          style={{
+            color: "rgba(255,255,255,0.65)",
+            fontFamily: "'Poppins', sans-serif",
+          }}
+        >
+          {getGreeting()}
+        </p>
+      </div>
 
       {/* Circular Progress */}
       <div
-        className="glass rounded-2xl p-4"
-        style={{ border: "1px solid rgba(212,175,55,0.15)" }}
+        className="rounded-2xl p-4"
+        style={{
+          background: "#ffffff",
+          border: "1px solid rgba(212,175,55,0.12)",
+          boxShadow: "0 2px 12px rgba(0,0,0,0.06)",
+        }}
       >
         <CircularProgress count={jamaatCount} total={5} />
-        {/* Progress summary */}
         <div
           className="grid grid-cols-3 gap-3 mt-4 pt-4"
-          style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}
+          style={{ borderTop: "1px solid rgba(0,0,0,0.06)" }}
         >
           <div className="text-center">
-            <p className="text-xs text-white/30 mb-1">Marked</p>
-            <p className="font-bold text-lg text-white">{markedCount}/5</p>
-          </div>
-          <div className="text-center">
-            <p className="text-xs text-white/30 mb-1">Jamaat</p>
-            <p className="font-bold text-lg emerald-text">{jamaatCount}</p>
-          </div>
-          <div className="text-center">
-            <p className="text-xs text-white/30 mb-1">Remaining</p>
+            <p
+              className="text-xs mb-1"
+              style={{ color: "#8a9bb0", fontFamily: "'Poppins', sans-serif" }}
+            >
+              Marked
+            </p>
             <p
               className="font-bold text-lg"
-              style={{ color: 5 - markedCount > 0 ? "#D4AF37" : "#10b981" }}
+              style={{ color: "#1a2035", fontFamily: "'Poppins', sans-serif" }}
+            >
+              {markedCount}/5
+            </p>
+          </div>
+          <div className="text-center">
+            <p
+              className="text-xs mb-1"
+              style={{ color: "#8a9bb0", fontFamily: "'Poppins', sans-serif" }}
+            >
+              Jamaat
+            </p>
+            <p
+              className="font-bold text-lg"
+              style={{ color: "#059669", fontFamily: "'Poppins', sans-serif" }}
+            >
+              {jamaatCount}
+            </p>
+          </div>
+          <div className="text-center">
+            <p
+              className="text-xs mb-1"
+              style={{ color: "#8a9bb0", fontFamily: "'Poppins', sans-serif" }}
+            >
+              Remaining
+            </p>
+            <p
+              className="font-bold text-lg"
+              style={{
+                color: 5 - markedCount > 0 ? "#b8941e" : "#059669",
+                fontFamily: "'Poppins', sans-serif",
+              }}
             >
               {5 - markedCount}
             </p>
@@ -191,30 +242,37 @@ export function Home({
         onReset={onResetTasbih}
       />
 
-      {/* Farz Prayer Cards */}
+      {/* Section heading */}
+      <div className="flex items-center gap-2 px-1">
+        <div
+          style={{
+            height: "1px",
+            flex: 1,
+            background:
+              "linear-gradient(90deg, rgba(184,148,30,0.3), transparent)",
+          }}
+        />
+        <p
+          className="text-[10px] font-semibold uppercase tracking-[0.2em]"
+          style={{
+            color: "rgba(184,148,30,0.6)",
+            fontFamily: "'Poppins', sans-serif",
+          }}
+        >
+          🕌 Farz Namazein
+        </p>
+        <div
+          style={{
+            height: "1px",
+            flex: 1,
+            background:
+              "linear-gradient(270deg, rgba(184,148,30,0.3), transparent)",
+          }}
+        />
+      </div>
+
+      {/* Prayer Cards */}
       <div className="space-y-3">
-        <div className="flex items-center gap-2 px-1">
-          <div
-            className="h-px flex-1"
-            style={{
-              background:
-                "linear-gradient(90deg, rgba(212,175,55,0.3), transparent)",
-            }}
-          />
-          <p
-            className="text-[10px] font-semibold uppercase tracking-[0.2em]"
-            style={{ color: "rgba(212,175,55,0.5)" }}
-          >
-            🕌 Farz Namazein
-          </p>
-          <div
-            className="h-px flex-1"
-            style={{
-              background:
-                "linear-gradient(270deg, rgba(212,175,55,0.3), transparent)",
-            }}
-          />
-        </div>
         {PRAYER_NAMES.map((name, i) => (
           <PrayerCard
             key={name}
@@ -227,43 +285,49 @@ export function Home({
         ))}
       </div>
 
-      {/* Advanced Mode — Nafl Prayers */}
+      {/* Advanced Mode Nafl Prayers */}
       {isAdvancedMode && (
         <div className="space-y-3">
           <div className="flex items-center gap-2 px-1 mt-2">
             <div
-              className="h-px flex-1"
               style={{
+                height: "1px",
+                flex: 1,
                 background:
                   "linear-gradient(90deg, rgba(16,185,129,0.3), transparent)",
               }}
             />
             <p
               className="text-[10px] font-semibold uppercase tracking-[0.2em]"
-              style={{ color: "rgba(16,185,129,0.6)" }}
+              style={{
+                color: "rgba(5,150,105,0.7)",
+                fontFamily: "'Poppins', sans-serif",
+              }}
             >
-              ✨ Nafl Namazein — Advanced Mode
+              ✨ Nafl Namazein
             </p>
             <div
-              className="h-px flex-1"
               style={{
+                height: "1px",
+                flex: 1,
                 background:
                   "linear-gradient(270deg, rgba(16,185,129,0.3), transparent)",
               }}
             />
           </div>
 
-          {/* Advanced prayer info banner */}
           <div
             className="rounded-xl px-4 py-3 text-center"
             style={{
-              background: "rgba(16,185,129,0.05)",
-              border: "1px solid rgba(16,185,129,0.12)",
+              background: "rgba(16,185,129,0.04)",
+              border: "1px solid rgba(16,185,129,0.1)",
             }}
           >
-            <p className="text-[10px] text-white/35 leading-relaxed">
-              Yeh namazein nafl hain — inhe padhna sawab ka bais hai. Advanced
-              Mode mein active hain.
+            <p
+              className="text-[10px] leading-relaxed"
+              style={{ color: "#4a5568", fontFamily: "'Poppins', sans-serif" }}
+            >
+              Yeh namazein nafl hain — inhe padhna sawab ka bais hai.
             </p>
           </div>
 
@@ -284,7 +348,10 @@ export function Home({
 
       {/* Motivational footer */}
       <div className="text-center py-4">
-        <p className="text-xs text-white/25 italic">
+        <p
+          className="text-xs italic"
+          style={{ color: "#8a9bb0", fontFamily: "'Poppins', sans-serif" }}
+        >
           &quot;Verily, Salah is prescribed for the believers at fixed
           times.&quot; (4:103)
         </p>
@@ -292,16 +359,12 @@ export function Home({
 
       {/* Branding */}
       <div className="text-center pb-6">
-        <p className="text-[10px] text-white/15">
-          © {new Date().getFullYear()}.{" "}
-          <a
-            href={`https://caffeine.ai?utm_source=caffeine-footer&utm_medium=referral&utm_content=${encodeURIComponent(typeof window !== "undefined" ? window.location.hostname : "")}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="hover:text-white/30 transition-colors"
-          >
-            Built with ♥ using caffeine.ai
-          </a>
+        <p
+          className="text-[10px]"
+          style={{ color: "#b0bec5", fontFamily: "'Poppins', sans-serif" }}
+        >
+          © {new Date().getFullYear()} • Crafted with ♥ by{" "}
+          <span className="shimmer-gold font-bold">MDQ</span>
         </p>
       </div>
     </div>

@@ -31,7 +31,6 @@ const MONTH_NAMES = [
   "November",
   "December",
 ];
-
 const URDU_MONTHS = [
   "Janwari",
   "Farwari",
@@ -50,8 +49,8 @@ const URDU_MONTHS = [
 function getPrayerColor(prayer: PrayerName): string {
   const colors: Record<PrayerName, string> = {
     Fajr: "#D4AF37",
-    Dhuhr: "#10b981",
-    Asr: "#3b82f6",
+    Dhuhr: "#059669",
+    Asr: "#2563eb",
     Maghrib: "#f97316",
     Isha: "#a855f7",
   };
@@ -74,17 +73,15 @@ interface MonthStats {
 
 function computeStats(
   year: number,
-  month: number, // 1-indexed
+  month: number,
   monthlyHistory: Record<string, DailyLog>,
   qazaVault: QazaEntry[],
   adaaRecords: AdaaRecord[],
 ): MonthStats {
   const monthStr = `${year}-${String(month).padStart(2, "0")}`;
-
   const relevantLogs = Object.entries(monthlyHistory)
     .filter(([date]) => date.startsWith(monthStr))
     .map(([, log]) => log);
-
   const perPrayer: Record<
     PrayerName,
     { jamaat: number; single: number; qaza: number }
@@ -95,7 +92,6 @@ function computeStats(
     Maghrib: { jamaat: 0, single: 0, qaza: 0 },
     Isha: { jamaat: 0, single: 0, qaza: 0 },
   };
-
   for (const log of relevantLogs) {
     for (const name of PRAYER_NAMES) {
       const status = log.prayers[name];
@@ -104,7 +100,6 @@ function computeStats(
       else if (status === "qaza") perPrayer[name].qaza++;
     }
   }
-
   const totalMarked = PRAYER_NAMES.reduce(
     (acc, p) =>
       acc + perPrayer[p].jamaat + perPrayer[p].single + perPrayer[p].qaza,
@@ -118,24 +113,16 @@ function computeStats(
     (acc, p) => acc + perPrayer[p].single,
     0,
   );
-  const qazaCount =
-    qazaVault.filter(
-      (q) => q.missedDate.startsWith(monthStr) && q.status === "pending",
-    ).length +
-    qazaVault.filter(
-      (q) => q.missedDate.startsWith(monthStr) && q.status === "resolved",
-    ).length;
-
+  const qazaCount = qazaVault.filter((q) =>
+    q.missedDate.startsWith(monthStr),
+  ).length;
   const adaaCount = adaaRecords.filter(
     (r) =>
       r.resolvedAt.includes(`${year}`) && r.missedDate.startsWith(monthStr),
   ).length;
-
-  // Compute longest jamaat streak
   const daysInMonth = new Date(year, month, 0).getDate();
   let longestStreak = 0;
   let currentStreak = 0;
-
   for (let d = 1; d <= daysInMonth; d++) {
     const dateStr = `${monthStr}-${String(d).padStart(2, "0")}`;
     const log = monthlyHistory[dateStr];
@@ -151,7 +138,6 @@ function computeStats(
       currentStreak = 0;
     }
   }
-
   return {
     totalMarked,
     jamaatCount,
@@ -181,12 +167,11 @@ export function MonthlyAnalysis({
       setSelectedMonth((m) => m - 1);
     }
   };
-
   const goToNext = () => {
     const isCurrentMonth =
       selectedMonth === now.getMonth() + 1 &&
       selectedYear === now.getFullYear();
-    if (isCurrentMonth) return; // can't go beyond current month
+    if (isCurrentMonth) return;
     if (selectedMonth === 12) {
       setSelectedMonth(1);
       setSelectedYear((y) => y + 1);
@@ -194,10 +179,8 @@ export function MonthlyAnalysis({
       setSelectedMonth((m) => m + 1);
     }
   };
-
   const isCurrentMonth =
     selectedMonth === now.getMonth() + 1 && selectedYear === now.getFullYear();
-
   const stats = computeStats(
     selectedYear,
     selectedMonth,
@@ -205,133 +188,145 @@ export function MonthlyAnalysis({
     qazaVault,
     adaaRecords,
   );
-
   const hasData = stats.daysTracked > 0;
 
   const summaryCards = [
     {
-      label: "Total Marked",
+      label: "Total",
       value: stats.totalMarked,
-      color: "#D4AF37",
-      bg: "rgba(212,175,55,0.1)",
-      border: "rgba(212,175,55,0.2)",
+      color: "#b8941e",
+      bg: "rgba(212,175,55,0.08)",
+      border: "rgba(212,175,55,0.18)",
       emoji: "📊",
     },
     {
       label: "Jamaat",
       value: stats.jamaatCount,
-      color: "#10b981",
-      bg: "rgba(16,185,129,0.1)",
-      border: "rgba(16,185,129,0.2)",
+      color: "#059669",
+      bg: "rgba(5,150,105,0.08)",
+      border: "rgba(5,150,105,0.18)",
       emoji: "🕌",
     },
     {
       label: "Single",
       value: stats.singleCount,
-      color: "#3b82f6",
-      bg: "rgba(59,130,246,0.1)",
-      border: "rgba(59,130,246,0.2)",
+      color: "#2563eb",
+      bg: "rgba(37,99,235,0.08)",
+      border: "rgba(37,99,235,0.18)",
       emoji: "🙏",
     },
     {
       label: "Qaza",
       value: stats.qazaCount,
-      color: "#ef4444",
-      bg: "rgba(239,68,68,0.1)",
-      border: "rgba(239,68,68,0.2)",
+      color: "#dc2626",
+      bg: "rgba(220,38,38,0.08)",
+      border: "rgba(220,38,38,0.18)",
       emoji: "⏰",
     },
     {
       label: "Adaa",
       value: stats.adaaCount,
-      color: "#a855f7",
-      bg: "rgba(168,85,247,0.1)",
-      border: "rgba(168,85,247,0.2)",
+      color: "#7c3aed",
+      bg: "rgba(124,58,237,0.08)",
+      border: "rgba(124,58,237,0.18)",
       emoji: "✅",
     },
   ];
 
   return (
     <div className="space-y-4" data-ocid="analysis.page">
-      {/* Section Header */}
       <div className="flex items-center gap-2 mb-1">
         <span className="text-base">📈</span>
-        <h2 className="text-sm font-semibold text-white/80">
+        <h2
+          className="text-sm font-semibold"
+          style={{ color: "#1a2035", fontFamily: "'Poppins', sans-serif" }}
+        >
           Monthly Analysis
         </h2>
       </div>
 
       {/* Month Selector */}
       <div
-        className="glass-premium rounded-2xl p-4 flex items-center justify-between"
-        style={{ border: "1px solid rgba(212,175,55,0.15)" }}
+        className="rounded-2xl p-4 flex items-center justify-between"
+        style={{
+          background: "#ffffff",
+          border: "1px solid rgba(212,175,55,0.15)",
+          boxShadow: "0 2px 12px rgba(0,0,0,0.05)",
+        }}
         data-ocid="analysis.panel"
       >
         <button
           type="button"
           data-ocid="analysis.pagination_prev"
           onClick={goToPrev}
-          className="w-10 h-10 rounded-xl flex items-center justify-center transition-all active:scale-90 hover:bg-white/10"
+          className="w-10 h-10 rounded-xl flex items-center justify-center transition-all active:scale-90"
           style={{
-            background: "rgba(212,175,55,0.08)",
+            background: "rgba(212,175,55,0.07)",
             border: "1px solid rgba(212,175,55,0.2)",
+            WebkitTapHighlightColor: "transparent",
           }}
         >
-          <ChevronLeft size={18} className="gold-text" />
+          <ChevronLeft size={18} style={{ color: "#b8941e" }} />
         </button>
-
         <div className="text-center">
           <p
             className="font-bold text-base shimmer-gold"
             style={{
-              fontFamily: "'Georgia', serif",
+              fontFamily: "'Amiri', 'Georgia', serif",
               letterSpacing: "0.06em",
             }}
           >
             {MONTH_NAMES[selectedMonth - 1]} {selectedYear}
           </p>
-          <p className="text-[10px] text-white/35 mt-0.5">
+          <p
+            className="text-[10px] mt-0.5"
+            style={{ color: "#8a9bb0", fontFamily: "'Poppins', sans-serif" }}
+          >
             {URDU_MONTHS[selectedMonth - 1]} {selectedYear}
           </p>
         </div>
-
         <button
           type="button"
           data-ocid="analysis.pagination_next"
           onClick={goToNext}
           disabled={isCurrentMonth}
-          className="w-10 h-10 rounded-xl flex items-center justify-center transition-all active:scale-90 hover:bg-white/10 disabled:opacity-30"
+          className="w-10 h-10 rounded-xl flex items-center justify-center transition-all active:scale-90 disabled:opacity-30"
           style={{
-            background: "rgba(212,175,55,0.08)",
+            background: "rgba(212,175,55,0.07)",
             border: "1px solid rgba(212,175,55,0.2)",
+            WebkitTapHighlightColor: "transparent",
           }}
         >
-          <ChevronRight size={18} className="gold-text" />
+          <ChevronRight size={18} style={{ color: "#b8941e" }} />
         </button>
       </div>
 
-      {/* No data state */}
       {!hasData ? (
         <div
-          className="card-enter glass rounded-2xl p-8 text-center"
-          style={{ border: "1px solid rgba(255,255,255,0.06)" }}
+          className="card-enter rounded-2xl p-8 text-center"
+          style={{
+            background: "#ffffff",
+            border: "1px solid rgba(0,0,0,0.07)",
+          }}
           data-ocid="analysis.empty_state"
         >
           <p className="text-4xl mb-3">📭</p>
           <p
             className="font-semibold text-base mb-1"
-            style={{ color: "rgba(212,175,55,0.6)" }}
+            style={{ color: "#b8941e", fontFamily: "'Poppins', sans-serif" }}
           >
             Is mahine ka data nahi mila
           </p>
-          <p className="text-xs text-white/30">
+          <p
+            className="text-xs"
+            style={{ color: "#8a9bb0", fontFamily: "'Poppins', sans-serif" }}
+          >
             {MONTH_NAMES[selectedMonth - 1]} {selectedYear} ke liye koi record
             nahi hai
           </p>
         </div>
       ) : (
         <>
-          {/* Stats Summary Cards */}
           <div className="grid grid-cols-3 gap-2">
             {summaryCards.slice(0, 3).map((card) => (
               <div
@@ -345,11 +340,20 @@ export function MonthlyAnalysis({
                 <p className="text-lg mb-0.5">{card.emoji}</p>
                 <p
                   className="font-bold text-xl leading-none"
-                  style={{ color: card.color }}
+                  style={{
+                    color: card.color,
+                    fontFamily: "'Poppins', sans-serif",
+                  }}
                 >
                   {card.value}
                 </p>
-                <p className="text-[9px] text-white/40 mt-1 uppercase tracking-wider">
+                <p
+                  className="text-[9px] mt-1 uppercase tracking-wider"
+                  style={{
+                    color: "#8a9bb0",
+                    fontFamily: "'Poppins', sans-serif",
+                  }}
+                >
                   {card.label}
                 </p>
               </div>
@@ -368,49 +372,73 @@ export function MonthlyAnalysis({
                 <p className="text-lg mb-0.5">{card.emoji}</p>
                 <p
                   className="font-bold text-xl leading-none"
-                  style={{ color: card.color }}
+                  style={{
+                    color: card.color,
+                    fontFamily: "'Poppins', sans-serif",
+                  }}
                 >
                   {card.value}
                 </p>
-                <p className="text-[9px] text-white/40 mt-1 uppercase tracking-wider">
+                <p
+                  className="text-[9px] mt-1 uppercase tracking-wider"
+                  style={{
+                    color: "#8a9bb0",
+                    fontFamily: "'Poppins', sans-serif",
+                  }}
+                >
                   {card.label}
                 </p>
               </div>
             ))}
           </div>
 
-          {/* Streak card */}
+          {/* Streak */}
           <div
-            className="card-enter glass rounded-2xl p-4 flex items-center gap-4"
+            className="card-enter rounded-2xl p-4 flex items-center gap-4"
             style={{
+              background: "#ffffff",
               border: "1px solid rgba(212,175,55,0.15)",
-              background:
-                "linear-gradient(135deg, rgba(212,175,55,0.07) 0%, rgba(16,185,129,0.04) 100%)",
+              boxShadow: "0 2px 12px rgba(0,0,0,0.05)",
             }}
           >
             <div
               className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 text-2xl"
               style={{
-                background: "rgba(212,175,55,0.12)",
-                border: "1px solid rgba(212,175,55,0.25)",
+                background: "rgba(212,175,55,0.08)",
+                border: "1px solid rgba(212,175,55,0.2)",
               }}
             >
               🔥
             </div>
             <div>
-              <p className="text-xs text-white/40 uppercase tracking-wider mb-0.5">
+              <p
+                className="text-xs uppercase tracking-wider mb-0.5"
+                style={{
+                  color: "#8a9bb0",
+                  fontFamily: "'Poppins', sans-serif",
+                }}
+              >
                 Longest Jamaat Streak
               </p>
               <p
                 className="font-bold text-2xl leading-none shimmer-gold"
-                style={{ fontFamily: "'Georgia', serif" }}
+                style={{ fontFamily: "'Poppins', sans-serif" }}
               >
-                {stats.longestJamaatStreak}
-                <span className="text-sm font-normal text-white/40 ml-1">
-                  {stats.longestJamaatStreak === 1 ? "din" : "din"}
+                {stats.longestJamaatStreak}{" "}
+                <span
+                  className="text-sm font-normal"
+                  style={{ color: "#8a9bb0" }}
+                >
+                  din
                 </span>
               </p>
-              <p className="text-[10px] text-white/30 mt-0.5">
+              <p
+                className="text-[10px] mt-0.5"
+                style={{
+                  color: "#8a9bb0",
+                  fontFamily: "'Poppins', sans-serif",
+                }}
+              >
                 Lagataar jamaat ke saath namaz
               </p>
             </div>
@@ -418,103 +446,113 @@ export function MonthlyAnalysis({
 
           {/* Per-prayer breakdown */}
           <div
-            className="card-enter glass rounded-2xl overflow-hidden"
-            style={{ border: "1px solid rgba(255,255,255,0.07)" }}
+            className="card-enter rounded-2xl overflow-hidden"
+            style={{
+              background: "#ffffff",
+              border: "1px solid rgba(0,0,0,0.07)",
+              boxShadow: "0 2px 12px rgba(0,0,0,0.05)",
+            }}
             data-ocid="analysis.table"
           >
             <div
               className="px-4 py-3"
-              style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}
+              style={{ borderBottom: "1px solid rgba(0,0,0,0.06)" }}
             >
-              <p className="text-xs font-semibold text-white/60 uppercase tracking-wider">
+              <p
+                className="text-xs font-semibold uppercase tracking-wider"
+                style={{
+                  color: "#4a5568",
+                  fontFamily: "'Poppins', sans-serif",
+                }}
+              >
                 Namaz ke Hisab se Breakdown
               </p>
             </div>
-
-            <div className="divide-y divide-white/5">
-              {PRAYER_NAMES.map((prayer) => {
+            <div>
+              {PRAYER_NAMES.map((prayer, i) => {
                 const data = stats.perPrayer[prayer];
                 const total = data.jamaat + data.single + data.qaza;
                 const jamaatPct = total > 0 ? (data.jamaat / total) * 100 : 0;
                 const color = getPrayerColor(prayer);
-
                 return (
                   <div
                     key={prayer}
                     className="px-4 py-3"
+                    style={{
+                      borderTop: i > 0 ? "1px solid rgba(0,0,0,0.05)" : "none",
+                    }}
                     data-ocid="analysis.row"
                   >
-                    {/* Prayer name row */}
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-2">
                         <span className="text-base">
                           {PRAYER_EMOJI[prayer]}
                         </span>
-                        <span className="text-sm font-medium text-white/80">
+                        <span
+                          className="text-sm font-medium"
+                          style={{
+                            color: "#1a2035",
+                            fontFamily: "'Poppins', sans-serif",
+                          }}
+                        >
                           {prayer}
                         </span>
                       </div>
-                      <span className="text-xs text-white/30">
+                      <span
+                        className="text-xs"
+                        style={{
+                          color: "#8a9bb0",
+                          fontFamily: "'Poppins', sans-serif",
+                        }}
+                      >
                         {total} total
                       </span>
                     </div>
-
-                    {/* Progress bar */}
                     <div
                       className="h-1.5 rounded-full mb-2 overflow-hidden"
-                      style={{ background: "rgba(255,255,255,0.06)" }}
+                      style={{ background: "rgba(0,0,0,0.06)" }}
                     >
                       <div
                         className="h-full rounded-full transition-all duration-700"
                         style={{
                           width: `${jamaatPct}%`,
                           background: `linear-gradient(90deg, ${color}, ${color}aa)`,
-                          boxShadow: `0 0 8px ${color}60`,
                         }}
                       />
                     </div>
-
-                    {/* Stats row */}
                     <div className="flex gap-3">
-                      <span className="flex items-center gap-1 text-[10px]">
+                      {[
+                        { label: "Jamaat", val: data.jamaat, color: "#059669" },
+                        { label: "Single", val: data.single, color: "#2563eb" },
+                        { label: "Qaza", val: data.qaza, color: "#dc2626" },
+                      ].map(({ label, val, color: c }) => (
                         <span
-                          className="w-2 h-2 rounded-full flex-shrink-0"
-                          style={{ background: "#10b981" }}
-                        />
-                        <span className="text-white/50">Jamaat:</span>
-                        <span
-                          style={{ color: "#10b981" }}
-                          className="font-bold"
+                          key={label}
+                          className="flex items-center gap-1 text-[10px]"
                         >
-                          {data.jamaat}
+                          <span
+                            className="w-2 h-2 rounded-full flex-shrink-0"
+                            style={{ background: c }}
+                          />
+                          <span
+                            style={{
+                              color: "#8a9bb0",
+                              fontFamily: "'Poppins', sans-serif",
+                            }}
+                          >
+                            {label}:
+                          </span>
+                          <span
+                            className="font-bold"
+                            style={{
+                              color: c,
+                              fontFamily: "'Poppins', sans-serif",
+                            }}
+                          >
+                            {val}
+                          </span>
                         </span>
-                      </span>
-                      <span className="flex items-center gap-1 text-[10px]">
-                        <span
-                          className="w-2 h-2 rounded-full flex-shrink-0"
-                          style={{ background: "#3b82f6" }}
-                        />
-                        <span className="text-white/50">Single:</span>
-                        <span
-                          style={{ color: "#3b82f6" }}
-                          className="font-bold"
-                        >
-                          {data.single}
-                        </span>
-                      </span>
-                      <span className="flex items-center gap-1 text-[10px]">
-                        <span
-                          className="w-2 h-2 rounded-full flex-shrink-0"
-                          style={{ background: "#ef4444" }}
-                        />
-                        <span className="text-white/50">Qaza:</span>
-                        <span
-                          style={{ color: "#ef4444" }}
-                          className="font-bold"
-                        >
-                          {data.qaza}
-                        </span>
-                      </span>
+                      ))}
                     </div>
                   </div>
                 );
@@ -522,7 +560,6 @@ export function MonthlyAnalysis({
             </div>
           </div>
 
-          {/* Days tracked */}
           <div
             className="card-enter rounded-xl p-3 flex items-center justify-between"
             style={{
@@ -530,10 +567,16 @@ export function MonthlyAnalysis({
               border: "1px solid rgba(212,175,55,0.1)",
             }}
           >
-            <p className="text-xs text-white/40">
+            <p
+              className="text-xs"
+              style={{ color: "#4a5568", fontFamily: "'Poppins', sans-serif" }}
+            >
               Is mahine record kiye gaye din
             </p>
-            <p className="font-bold text-sm gold-text">
+            <p
+              className="font-bold text-sm shimmer-gold"
+              style={{ fontFamily: "'Poppins', sans-serif" }}
+            >
               {stats.daysTracked} din
             </p>
           </div>

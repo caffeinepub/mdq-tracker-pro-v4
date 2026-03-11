@@ -1,13 +1,17 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AdaaRecords } from "./components/mdq/AdaaRecords";
+import { BlogMode } from "./components/mdq/BlogMode";
 import { BottomNav } from "./components/mdq/BottomNav";
+import { DateClockStrip } from "./components/mdq/DateClockStrip";
 import { DuaenModal } from "./components/mdq/DuaenModal";
 import { GracePeriod } from "./components/mdq/GracePeriod";
 import { Header } from "./components/mdq/Header";
+import { HistoryPage } from "./components/mdq/HistoryPage";
 import { Home } from "./components/mdq/Home";
 import { MonthlyAnalysis } from "./components/mdq/MonthlyAnalysis";
 import { QazaVault } from "./components/mdq/QazaVault";
 import { Settings } from "./components/mdq/Settings";
+import { SplashScreen } from "./components/mdq/SplashScreen";
 import { Toast } from "./components/mdq/Toast";
 import { useAppState } from "./hooks/useAppState";
 import type {
@@ -19,7 +23,6 @@ import type {
 
 function getMaleVoice(): SpeechSynthesisVoice | null {
   const voices = window.speechSynthesis.getVoices();
-  // Priority order: Urdu male, Hindi male, any male, fallback
   const malePriority = [
     (v: SpeechSynthesisVoice) =>
       v.lang.startsWith("ur") && v.name.toLowerCase().includes("male"),
@@ -54,14 +57,11 @@ function speak(text: string) {
     utter.rate = 0.85;
     utter.pitch = 0.9;
     utter.volume = 1.0;
-
     const trySpeak = () => {
       const voice = getMaleVoice();
       if (voice) utter.voice = voice;
       window.speechSynthesis.speak(utter);
     };
-
-    // Voices may not be loaded yet — wait if needed
     if (window.speechSynthesis.getVoices().length === 0) {
       window.speechSynthesis.onvoiceschanged = () => {
         window.speechSynthesis.onvoiceschanged = null;
@@ -80,6 +80,7 @@ function generateId() {
 }
 
 export default function App() {
+  const [splashDone, setSplashDone] = useState(false);
   const [activeTab, setActiveTab] = useState<TabName>("home");
   const [toast, setToast] = useState({ message: "", visible: false, id: "" });
   const [duaenOpen, setDuaenOpen] = useState(false);
@@ -95,30 +96,26 @@ export default function App() {
     markGracePrayer,
     convertExpiredGraceToQaza,
     updatePrayerTimes,
+    updateAdvancedPrayerTimes,
     updateProfile,
     incrementTasbih,
     resetTasbih,
+    updateBlogArticles,
   } = useAppState();
 
-  // Register service worker
   useEffect(() => {
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("/sw.js").catch(() => {
-        // Service worker registration failed, continue without it
-      });
+      navigator.serviceWorker.register("/sw.js").catch(() => {});
     }
   }, []);
 
-  // Midnight reset check — runs every 30 seconds
   useEffect(() => {
     checkMidnightReset();
     checkExpiredGrace();
-
     const interval = setInterval(() => {
       checkMidnightReset();
       checkExpiredGrace();
     }, 30_000);
-
     return () => clearInterval(interval);
   }, [checkMidnightReset, checkExpiredGrace]);
 
@@ -139,7 +136,6 @@ export default function App() {
   const handleMarkPrayer = useCallback(
     (name: PrayerName, status: PrayerStatus) => {
       markPrayer(name, status);
-
       if (status === "jamaat") {
         speak("Alhamdulillah");
         showToast("MaashaAllah, Alhamdulillah bol kar niyat bandhein. 🤲");
@@ -196,6 +192,17 @@ export default function App() {
 
   const graceBadge = state.gracePeriod.length;
 
+  const tabTitles: Record<TabName, string> = {
+    home: "Daily Dashboard",
+    qaza: "Qaza Vault",
+    adaa: "Adaa Records",
+    grace: "Grace Period",
+    settings: "Settings",
+    analysis: "Monthly Analysis",
+    history: "Prayer History",
+    blog: "Islamic Blog",
+  };
+
   const renderTab = () => {
     switch (activeTab) {
       case "home":
@@ -226,7 +233,11 @@ export default function App() {
         return (
           <Settings
             prayerTimes={state.prayerTimes}
-            onSave={updatePrayerTimes}
+            advancedPrayerTimes={state.advancedPrayerTimes}
+            onSave={(times, advancedTimes) => {
+              updatePrayerTimes(times);
+              updateAdvancedPrayerTimes(advancedTimes);
+            }}
           />
         );
       case "analysis":
@@ -237,173 +248,93 @@ export default function App() {
             adaaRecords={state.adaaRecords}
           />
         );
+      case "history":
+        return <HistoryPage monthlyHistory={state.monthlyHistory} />;
+      case "blog":
+        return (
+          <BlogMode
+            articles={state.blogArticles}
+            onUpdate={updateBlogArticles}
+          />
+        );
     }
   };
 
-  const tabTitles: Record<TabName, string> = {
-    home: "Daily Dashboard",
-    qaza: "Qaza Vault",
-    adaa: "Adaa Records",
-    grace: "Grace Period",
-    settings: "Settings",
-    analysis: "Monthly Analysis",
-  };
-
   return (
-    <div
-      className="min-h-screen star-bg"
-      style={{
-        background: "#0a0f1e",
-        backgroundImage:
-          "radial-gradient(ellipse at 20% 10%, rgba(212,175,55,0.07) 0%, transparent 50%), radial-gradient(ellipse at 80% 85%, rgba(16,185,129,0.04) 0%, transparent 45%), radial-gradient(ellipse at 50% 50%, rgba(59,130,246,0.02) 0%, transparent 60%)",
-      }}
-    >
-      {/* Centered container for desktop */}
-      <div
-        className="mx-auto max-w-[430px] min-h-screen relative flex flex-col"
-        style={{
-          background:
-            "linear-gradient(180deg, rgba(12,18,32,0.97) 0%, rgba(10,15,30,0.98) 35%, rgba(9,16,24,0.99) 100%)",
-        }}
-      >
-        {/* Decorative floating star dots */}
-        <div className="pointer-events-none fixed inset-0 max-w-[430px] mx-auto overflow-hidden z-0">
-          {[
-            {
-              top: "8%",
-              left: "12%",
-              size: 2,
-              delay: "0s",
-              dur: "8s",
-              color: "rgba(212,175,55,0.5)",
-            },
-            {
-              top: "15%",
-              left: "78%",
-              size: 1.5,
-              delay: "1.5s",
-              dur: "11s",
-              color: "rgba(255,255,255,0.4)",
-            },
-            {
-              top: "28%",
-              left: "45%",
-              size: 1,
-              delay: "3s",
-              dur: "9s",
-              color: "rgba(16,185,129,0.4)",
-            },
-            {
-              top: "42%",
-              left: "88%",
-              size: 2,
-              delay: "0.8s",
-              dur: "13s",
-              color: "rgba(212,175,55,0.5)",
-            },
-            {
-              top: "60%",
-              left: "6%",
-              size: 1.5,
-              delay: "2s",
-              dur: "10s",
-              color: "rgba(255,255,255,0.4)",
-            },
-            {
-              top: "72%",
-              left: "62%",
-              size: 1,
-              delay: "4s",
-              dur: "7s",
-              color: "rgba(16,185,129,0.4)",
-            },
-            {
-              top: "85%",
-              left: "30%",
-              size: 2,
-              delay: "1s",
-              dur: "12s",
-              color: "rgba(212,175,55,0.5)",
-            },
-            {
-              top: "20%",
-              left: "22%",
-              size: 1,
-              delay: "2.5s",
-              dur: "9s",
-              color: "rgba(255,255,255,0.4)",
-            },
-          ].map((star) => (
-            <div
-              key={`${star.top}-${star.left}`}
-              style={{
-                position: "absolute",
-                top: star.top,
-                left: star.left,
-                width: `${star.size}px`,
-                height: `${star.size}px`,
-                borderRadius: "50%",
-                background: star.color,
-                animation: `breathe ${star.dur} ease-in-out infinite`,
-                animationDelay: star.delay,
-              }}
-            />
-          ))}
-        </div>
-        {/* Header */}
-        <Header
-          profileName={state.profileName}
-          isNormalMode={state.isNormalMode}
-          onProfileUpdate={updateProfile}
-          onOpenDuaen={() => setDuaenOpen(true)}
-        />
+    <>
+      {/* Splash Screen -- shown every time */}
+      {!splashDone && <SplashScreen onEnter={() => setSplashDone(true)} />}
 
-        {/* Tab title strip */}
+      {/* Main App */}
+      <div className="min-h-screen" style={{ background: "#F4F7F6" }}>
         <div
-          className="fixed top-14 left-0 right-0 z-40"
-          style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}
+          className="mx-auto max-w-[430px] min-h-screen relative flex flex-col"
+          style={{ background: "#F4F7F6" }}
         >
+          {/* Fixed Header */}
+          <Header
+            profileName={state.profileName}
+            isNormalMode={state.isNormalMode}
+            onProfileUpdate={updateProfile}
+            onOpenDuaen={() => setDuaenOpen(true)}
+          />
+
+          {/* Fixed sub-header: DateClockStrip + tab title */}
           <div
-            className="mx-auto max-w-[430px] px-4 py-2"
+            className="fixed top-14 left-0 right-0 z-40"
+            style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}
+          >
+            <div className="mx-auto max-w-[430px]">
+              {/* Date + Clock + Hijri strip */}
+              <DateClockStrip />
+              {/* Tab title */}
+              <div
+                style={{
+                  background: "rgba(244,247,246,0.97)",
+                  borderBottom: "1px solid rgba(212,175,55,0.08)",
+                  padding: "4px 16px",
+                  textAlign: "center",
+                }}
+              >
+                <p
+                  style={{
+                    fontSize: "9px",
+                    fontWeight: "600",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.25em",
+                    color: "rgba(184,148,30,0.5)",
+                    fontFamily: "'Poppins', sans-serif",
+                  }}
+                >
+                  {tabTitles[activeTab]}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Main content -- padded for header + strip + tab title */}
+          <main
+            className="flex-1 overflow-y-auto px-4 pb-24"
             style={{
-              background: "rgba(10,15,30,0.96)",
-              borderBottom: "1px solid rgba(212,175,55,0.08)",
+              paddingTop: "calc(env(safe-area-inset-top, 0px) + 118px)",
             }}
           >
-            <p
-              className="text-[10px] font-semibold uppercase text-center tracking-[0.25em]"
-              style={{ color: "rgba(212,175,55,0.5)" }}
-            >
-              {tabTitles[activeTab]}
-            </p>
-          </div>
+            {renderTab()}
+          </main>
+
+          <BottomNav
+            activeTab={activeTab}
+            onTabChange={setActiveTab}
+            graceBadge={graceBadge}
+          />
+          <Toast
+            message={toast.message}
+            visible={toast.visible}
+            onDismiss={handleDismissToast}
+          />
+          <DuaenModal open={duaenOpen} onClose={() => setDuaenOpen(false)} />
         </div>
-
-        {/* Main content */}
-        <main
-          className="flex-1 overflow-y-auto px-4 pb-24"
-          style={{ paddingTop: "calc(env(safe-area-inset-top, 0px) + 88px)" }}
-        >
-          {renderTab()}
-        </main>
-
-        {/* Bottom Nav */}
-        <BottomNav
-          activeTab={activeTab}
-          onTabChange={setActiveTab}
-          graceBadge={graceBadge}
-        />
-
-        {/* Toast */}
-        <Toast
-          message={toast.message}
-          visible={toast.visible}
-          onDismiss={handleDismissToast}
-        />
-
-        {/* Duaen Modal */}
-        <DuaenModal open={duaenOpen} onClose={() => setDuaenOpen(false)} />
       </div>
-    </div>
+    </>
   );
 }

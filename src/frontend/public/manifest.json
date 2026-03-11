@@ -1,7 +1,7 @@
 {
-  "name": "MDQ Tracker Pro V4",
-  "short_name": "MDQ Tracker",
-  "description": "Premium Islamic Prayer Tracker - Track Salah with Time-Lock Engine & Grace Period",
+  "name": "NAMAZ TRACKER",
+  "short_name": "NAMAZ",
+  "description": "Premium Islamic Prayer Tracker - Namaz Track karein Jamaat, Single aur Qaza ke saath",
   "start_url": "/",
   "display": "standalone",
   "orientation": "portrait",
@@ -22,5 +22,5 @@
     }
   ],
   "categories": ["lifestyle", "utilities"],
-  "lang": "en"
+  "lang": "ur"
 }

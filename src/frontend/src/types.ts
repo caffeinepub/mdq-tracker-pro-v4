@@ -8,17 +8,20 @@ export type TabName =
   | "adaa"
   | "grace"
   | "settings"
-  | "analysis";
+  | "analysis"
+  | "history"
+  | "blog";
 
 export interface PrayerTime {
   name: PrayerName;
-  time: string; // "HH:MM" 24h format
+  time: string;
 }
 
 export interface DailyLog {
-  date: string; // "YYYY-MM-DD"
+  date: string;
   prayers: Record<PrayerName, PrayerStatus>;
   advancedPrayers?: Record<AdvancedPrayerName, PrayerStatus>;
+  journal?: string;
 }
 
 export interface QazaEntry {
@@ -41,7 +44,18 @@ export interface GracePeriodEntry {
   id: string;
   date: string;
   prayerName: PrayerName;
-  expiresAt: string; // ISO string 24h after midnight of missed date
+  expiresAt: string;
+}
+
+export interface BlogArticle {
+  id: string;
+  title: string;
+  category: string;
+  content: string;
+  isBookmarked?: boolean;
+  readProgress?: number; // 0-100
+  createdAt: string;
+  isUserAdded?: boolean;
 }
 
 export interface AppState {
@@ -55,7 +69,8 @@ export interface AppState {
   profileName: string;
   isNormalMode: boolean;
   monthlyHistory: Record<string, DailyLog>;
-  tasbihs: Record<string, number>; // date -> count
+  tasbihs: Record<string, number>;
+  blogArticles: BlogArticle[];
 }
 
 export interface ToastMessage {

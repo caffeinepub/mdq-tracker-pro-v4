@@ -342,7 +342,7 @@ export function DuaenModal({ open, onClose }: DuaenModalProps) {
           <h2
             className="font-bold text-lg shimmer-gold"
             style={{
-              fontFamily: "'Georgia', 'Palatino Linotype', serif",
+              fontFamily: "'Amiri', 'Georgia', serif",
               letterSpacing: "0.06em",
             }}
           >
@@ -468,7 +468,7 @@ export function DuaenModal({ open, onClose }: DuaenModalProps) {
                 <p
                   className="text-right mb-3 leading-loose"
                   style={{
-                    fontFamily: "'Georgia', 'Times New Roman', serif",
+                    fontFamily: "'Amiri', 'Georgia', serif",
                     fontSize: "1.05rem",
                     color: "#D4AF37",
                     direction: "rtl",

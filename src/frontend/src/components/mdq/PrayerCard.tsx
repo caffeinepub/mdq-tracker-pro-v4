@@ -42,42 +42,59 @@ const PRAYER_EMOJI: Record<PrayerName, string> = {
   Isha: "🌙",
 };
 
+const PRAYER_DESC: Record<PrayerName, string> = {
+  Fajr: "Subah ki Namaz",
+  Dhuhr: "Dopahar ki Namaz",
+  Asr: "Sham se Pahle",
+  Maghrib: "Sham ki Namaz",
+  Isha: "Raat ki Namaz",
+};
+
 const STATUS_CONFIG = {
   jamaat: {
     label: "Jamaat",
-    color: "#10b981",
-    bg: "rgba(16,185,129,0.12)",
-    border: "rgba(16,185,129,0.35)",
-    glow: "rgba(16,185,129,0.15)",
+    color: "#059669",
+    bg: "rgba(16,185,129,0.08)",
+    border: "rgba(16,185,129,0.25)",
+    glow: "rgba(16,185,129,0.1)",
+    cardBg: "rgba(16,185,129,0.04)",
     icon: "✦",
   },
   single: {
     label: "Single",
-    color: "#3b82f6",
-    bg: "rgba(59,130,246,0.12)",
-    border: "rgba(59,130,246,0.35)",
-    glow: "rgba(59,130,246,0.15)",
+    color: "#2563eb",
+    bg: "rgba(59,130,246,0.08)",
+    border: "rgba(59,130,246,0.25)",
+    glow: "rgba(59,130,246,0.1)",
+    cardBg: "rgba(59,130,246,0.04)",
     icon: "✓",
   },
   qaza: {
     label: "Qaza",
-    color: "#ef4444",
-    bg: "rgba(239,68,68,0.12)",
-    border: "rgba(239,68,68,0.35)",
-    glow: "rgba(239,68,68,0.15)",
+    color: "#dc2626",
+    bg: "rgba(239,68,68,0.08)",
+    border: "rgba(239,68,68,0.25)",
+    glow: "rgba(239,68,68,0.1)",
+    cardBg: "rgba(239,68,68,0.04)",
     icon: "⚑",
   },
-  unmarked: { label: "", color: "", bg: "", border: "", glow: "", icon: "" },
+  unmarked: {
+    label: "",
+    color: "",
+    bg: "",
+    border: "",
+    glow: "",
+    cardBg: "",
+    icon: "",
+  },
 };
 
 const nameLower = (name: PrayerName) => name.toLowerCase();
 
-// Ripple effect on button click
 function createRipple(e: React.MouseEvent<HTMLButtonElement>) {
   const btn = e.currentTarget;
   const existing = btn.querySelector(".ripple-el");
   if (existing) existing.remove();
-
   const circle = document.createElement("span");
   const rect = btn.getBoundingClientRect();
   const size = Math.max(rect.width, rect.height) * 2;
@@ -89,7 +106,7 @@ function createRipple(e: React.MouseEvent<HTMLButtonElement>) {
     height:${size}px;
     left:${e.clientX - rect.left - size / 2}px;
     top:${e.clientY - rect.top - size / 2}px;
-    background:rgba(255,255,255,0.25);
+    background:rgba(255,255,255,0.35);
     animation:ripple 0.55s ease-out forwards;
     pointer-events:none;
     transform:scale(0);
@@ -109,24 +126,28 @@ export function PrayerCard({
   const isMarked = status !== "unmarked";
   const statusConfig = STATUS_CONFIG[status];
   const cardRef = useRef<HTMLDivElement>(null);
-
   const delayClass = `card-enter card-enter-${Math.min(index + 1, 5)}`;
 
   return (
     <div
       ref={cardRef}
-      className={`glass-premium rounded-2xl p-4 transition-all duration-300 ${delayClass} ${
-        locked ? "opacity-40 pointer-events-none" : ""
+      className={`rounded-2xl p-4 transition-all duration-300 ${delayClass} ${
+        locked ? "opacity-50 pointer-events-none" : ""
       } ${isMarked ? "spring-pop" : ""}`}
       style={{
+        background: isMarked
+          ? statusConfig.cardBg
+          : locked
+            ? "rgba(0,0,0,0.03)"
+            : "#ffffff",
         border: isMarked
           ? `1px solid ${statusConfig.border}`
           : locked
-            ? "1px solid rgba(255,255,255,0.05)"
-            : "1px solid rgba(255,255,255,0.09)",
+            ? "1px solid rgba(0,0,0,0.06)"
+            : "1px solid rgba(212,175,55,0.12)",
         boxShadow: isMarked
-          ? `0 4px 24px ${statusConfig.glow}, inset 0 1px 0 rgba(255,255,255,0.06)`
-          : "inset 0 1px 0 rgba(255,255,255,0.04)",
+          ? `0 4px 20px ${statusConfig.glow}`
+          : "0 2px 12px rgba(0,0,0,0.06)",
         transition: "all 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94)",
       }}
     >
@@ -136,13 +157,10 @@ export function PrayerCard({
           <div
             className="w-11 h-11 rounded-xl flex items-center justify-center text-xl flex-shrink-0 transition-all duration-300"
             style={{
-              background: isMarked
-                ? `${statusConfig.bg}`
-                : "rgba(255,255,255,0.05)",
+              background: isMarked ? statusConfig.bg : "rgba(212,175,55,0.08)",
               border: isMarked
                 ? `1px solid ${statusConfig.border}`
-                : "1px solid rgba(255,255,255,0.07)",
-              boxShadow: isMarked ? `0 0 14px ${statusConfig.glow}` : "none",
+                : "1px solid rgba(212,175,55,0.15)",
             }}
           >
             {locked ? "🔒" : PRAYER_EMOJI[name]}
@@ -150,14 +168,22 @@ export function PrayerCard({
           <div>
             <div className="flex items-center gap-2">
               <h3
-                className="font-semibold text-white text-sm tracking-wide"
-                style={{ letterSpacing: "0.03em" }}
+                className="font-semibold text-sm tracking-wide"
+                style={{
+                  color: "#1a2035",
+                  letterSpacing: "0.03em",
+                  fontFamily: "'Poppins', sans-serif",
+                }}
               >
                 {name}
               </h3>
               <span
-                className="text-sm text-white/25"
-                style={{ fontFamily: "serif", letterSpacing: "0.01em" }}
+                className="text-sm"
+                style={{
+                  color: "rgba(184,148,30,0.5)",
+                  fontFamily: "'Amiri', serif",
+                  letterSpacing: "0.01em",
+                }}
               >
                 {PRAYER_ARABIC[name]}
               </span>
@@ -165,10 +191,13 @@ export function PrayerCard({
             <p
               className="text-xs mt-0.5"
               style={{
-                color: isMarked ? statusConfig.color : "rgba(255,255,255,0.35)",
+                color: isMarked ? statusConfig.color : "#8a9bb0",
+                fontFamily: "'Poppins', sans-serif",
               }}
             >
-              {formatTime(time)}
+              {isMarked
+                ? formatTime(time)
+                : `${PRAYER_DESC[name]} • ${formatTime(time)}`}
             </p>
           </div>
         </div>
@@ -179,12 +208,18 @@ export function PrayerCard({
             <div
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-full"
               style={{
-                background: "rgba(255,255,255,0.04)",
-                border: "1px solid rgba(255,255,255,0.08)",
+                background: "rgba(0,0,0,0.05)",
+                border: "1px solid rgba(0,0,0,0.08)",
               }}
             >
-              <Lock size={11} className="text-white/30" />
-              <span className="text-[11px] text-white/30 font-medium">
+              <Lock size={11} style={{ color: "#8a9bb0" }} />
+              <span
+                className="text-[11px] font-medium"
+                style={{
+                  color: "#8a9bb0",
+                  fontFamily: "'Poppins', sans-serif",
+                }}
+              >
                 Locked
               </span>
             </div>
@@ -195,12 +230,14 @@ export function PrayerCard({
               style={{
                 background: statusConfig.bg,
                 border: `1px solid ${statusConfig.border}`,
-                boxShadow: `0 0 10px ${statusConfig.glow}`,
               }}
             >
               <span
                 className="text-xs font-bold tracking-wide"
-                style={{ color: statusConfig.color }}
+                style={{
+                  color: statusConfig.color,
+                  fontFamily: "'Poppins', sans-serif",
+                }}
               >
                 {statusConfig.icon} {statusConfig.label}
               </span>
@@ -212,10 +249,10 @@ export function PrayerCard({
       {/* Divider */}
       <div
         className="mb-3"
-        style={{ height: "1px", background: "rgba(255,255,255,0.05)" }}
+        style={{ height: "1px", background: "rgba(0,0,0,0.06)" }}
       />
 
-      {/* Action Buttons — unmarked + unlocked */}
+      {/* Action Buttons */}
       {!isMarked && !locked && (
         <div className="grid grid-cols-3 gap-2">
           {[
@@ -247,7 +284,7 @@ export function PrayerCard({
                 onMark(name, s);
               }}
               className={`${cls} text-xs py-2.5 px-2 font-semibold transition-all active:scale-95 relative overflow-hidden`}
-              style={{ minHeight: "44px" }}
+              style={{ minHeight: "44px", fontFamily: "'Poppins', sans-serif" }}
             >
               {label}
             </button>
@@ -255,20 +292,24 @@ export function PrayerCard({
         </div>
       )}
 
-      {/* Frozen state — already marked */}
       {isMarked && (
         <div className="grid grid-cols-3 gap-2">
           {[
-            { color: "#3b82f6", bg: "rgba(59,130,246,0.08)", label: "Single" },
-            { color: "#10b981", bg: "rgba(16,185,129,0.08)", label: "Jamaat" },
-            { color: "#ef4444", bg: "rgba(239,68,68,0.08)", label: "Qaza" },
+            { color: "#2563eb", bg: "rgba(59,130,246,0.06)", label: "Single" },
+            { color: "#059669", bg: "rgba(16,185,129,0.06)", label: "Jamaat" },
+            { color: "#dc2626", bg: "rgba(239,68,68,0.06)", label: "Qaza" },
           ].map(({ color, bg, label }) => (
             <button
               key={label}
               type="button"
               disabled
-              className="text-[11px] py-2.5 px-2 rounded-xl font-semibold opacity-25 cursor-not-allowed"
-              style={{ background: bg, color, minHeight: "44px" }}
+              className="text-[11px] py-2.5 px-2 rounded-xl font-semibold opacity-30 cursor-not-allowed"
+              style={{
+                background: bg,
+                color,
+                minHeight: "44px",
+                fontFamily: "'Poppins', sans-serif",
+              }}
             >
               {label}
             </button>

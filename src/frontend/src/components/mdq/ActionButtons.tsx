@@ -11,29 +11,29 @@ const ACTIONS: {
     id: "dua",
     emoji: "🤲",
     label: "Dua Mode",
-    gradient: "linear-gradient(135deg,#3b82f6,#2563eb)",
-    shadow: "rgba(59,130,246,0.35)",
+    gradient: "linear-gradient(135deg,#0D1B2A,#162538)",
+    shadow: "rgba(13,27,42,0.35)",
   },
   {
     id: "tasbih",
     emoji: "📿",
     label: "Tasbih",
-    gradient: "linear-gradient(135deg,#8b5cf6,#7c3aed)",
-    shadow: "rgba(124,58,237,0.35)",
+    gradient: "linear-gradient(135deg,#1a2d45,#0D1B2A)",
+    shadow: "rgba(13,27,42,0.35)",
   },
   {
     id: "journal",
     emoji: "✍️",
     label: "Daily Write",
-    gradient: "linear-gradient(135deg,#D4AF37,#b8941e)",
-    shadow: "rgba(212,175,55,0.35)",
+    gradient: "linear-gradient(135deg,#C9A84C,#b8941e)",
+    shadow: "rgba(201,168,76,0.40)",
   },
   {
     id: "blog",
     emoji: "📖",
     label: "Blog Mode",
-    gradient: "linear-gradient(135deg,#14b8a6,#0d9488)",
-    shadow: "rgba(20,184,166,0.35)",
+    gradient: "linear-gradient(135deg,#0D1B2A,#162538)",
+    shadow: "rgba(13,27,42,0.35)",
   },
   {
     id: "introduction",
@@ -61,15 +61,20 @@ export function ActionButtons({ onNavigate }: ActionButtonsProps) {
           style={{
             background: a.gradient,
             boxShadow: `0 4px 16px ${a.shadow}`,
+            border: "1px solid rgba(201,168,76,0.2)",
             WebkitTapHighlightColor: "transparent",
           }}
         >
           <span style={{ fontSize: "22px", lineHeight: 1 }}>{a.emoji}</span>
           <span
-            className="text-[9px] font-semibold text-white text-center leading-tight"
+            className="text-[9px] font-semibold text-center leading-tight"
             style={{
               fontFamily: "'Poppins', sans-serif",
               letterSpacing: "0.02em",
+              color:
+                a.id === "journal" || a.id === "introduction"
+                  ? "#0D1B2A"
+                  : "#F5F0E8",
             }}
           >
             {a.label}

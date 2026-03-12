@@ -7,6 +7,42 @@ interface IntroductionPageProps {
   onBack: () => void;
 }
 
+const installGuide: Record<Lang, { title: string; steps: string[] }> = {
+  roman: {
+    title: "App Kaise Install Karen",
+    steps: [
+      "Chrome mein app ka link open karein",
+      "Upar daayein 3 dots (⋮) tap karein",
+      '"Add to Home Screen" option tap karein',
+      '"Install" button dabayein -- app install ho jaayega',
+      "App open karein, Settings mein jaayein -- Azan & Jamaat timings set karein",
+      "Ab har namaz se pehle notification aayegi InshaAllah!",
+    ],
+  },
+  urdu: {
+    title: "ایپ کیسے انسٹال کریں",
+    steps: [
+      "کروم میں ایپ کا لنک کھولیں",
+      "اوپر دائیں 3 نقطے (⋮) ٹیپ کریں",
+      '"Add to Home Screen" آپشن ٹیپ کریں',
+      '"Install" بٹن دبائیں -- ایپ انسٹال ہو جائے گی',
+      "ایپ کھولیں، سیٹنگز میں جائیں -- اذان و جماعت ٹائمنگز سیٹ کریں",
+      "اب ہر نماز سے پہلے نوٹیفکیشن آئے گی انشاء اللہ!",
+    ],
+  },
+  telugu: {
+    title: "యాప్ ఎలా ఇన్‌స్టాల్ చేయాలి",
+    steps: [
+      "Chrome లో యాప్ లింక్ తెరవండి",
+      "పైన కుడివైపు 3 చుక్కలు (⋮) నొక్కండి",
+      '"Add to Home Screen" ఎంచుకోండి',
+      '"Install" నొక్కండి -- యాప్ ఇన్‌స్టాల్ అవుతుంది',
+      "యాప్ తెరవండి, Settings కి వెళ్ళండి -- Azan & Jamaat సమయాలు సెట్ చేయండి",
+      "ఇప్పుడు ప్రతి నమాజ్ కు ముందు notification వస్తుంది InshaAllah!",
+    ],
+  },
+};
+
 const content: Record<
   Lang,
   {
@@ -51,7 +87,7 @@ const content: Record<
       {
         icon: "📿",
         name: "Tasbih Mode",
-        desc: "32+ wazaif ke saath premium tasbih counter",
+        desc: "50+ wazaif ke saath premium tasbih counter",
       },
       { icon: "✍️", name: "Daily Journal", desc: "Roz apne dil ki baat likho" },
       {
@@ -101,7 +137,7 @@ const content: Record<
       {
         icon: "📿",
         name: "تسبیح موڈ",
-        desc: "32+ وظائف کے ساتھ پریمیم تسبیح کاؤنٹر",
+        desc: "50+ وظائف کے ساتھ پریمیم تسبیح کاؤنٹر",
       },
       { icon: "✍️", name: "روزانہ جرنل", desc: "روز اپنے دل کی بات لکھیں" },
       { icon: "📝", name: "بلاگ موڈ", desc: "اسلامی مضامین پڑھیں اور لکھیں" },
@@ -128,7 +164,7 @@ const content: Record<
       { icon: "📊", name: "ఖజా వాల్ట్", desc: "మిస్ అయిన నమాజ్‌లు ట్రాక్ చేయండి మరియు చేయండి" },
       { icon: "🌙", name: "నఫిల్ విశ్లేషణ", desc: "మీ నఫిల్ ఇబాదత్ యొక్క నెలవారీ సమీక్ష చేయండి" },
       { icon: "🤲", name: "దువా మోడ్", desc: "53+ ప్రామాణిక దువాలు తెలుగు మరియు ఉర్దూలో" },
-      { icon: "📿", name: "తస్బీహ్ మోడ్", desc: "32+ వజాయిఫ్‌తో ప్రీమియం తస్బీహ్ కౌంటర్" },
+      { icon: "📿", name: "తస్బీహ్ మోడ్", desc: "50+ వజాయిఫ్‌తో ప్రీమియం తస్బీహ్ కౌంటర్" },
       { icon: "✍️", name: "డైలీ జర్నల్", desc: "రోజూ మీ మనసులో ఉన్న మాటలు రాయండి" },
       { icon: "📝", name: "బ్లాగ్ మోడ్", desc: "ఇస్లామిక్ వ్యాసాలు చదవండి మరియు రాయండి" },
       { icon: "🔔", name: "నోటిఫికేషన్లు", desc: "నమాజ్ వేళప్పుడు గుర్తు చేయడానికి" },
@@ -144,6 +180,7 @@ const content: Record<
 export function IntroductionPage({ onBack }: IntroductionPageProps) {
   const [lang, setLang] = useState<Lang>("roman");
   const c = content[lang];
+  const guide = installGuide[lang];
 
   const langButtons: { key: Lang; label: string }[] = [
     { key: "roman", label: "Roman Urdu" },
@@ -156,14 +193,14 @@ export function IntroductionPage({ onBack }: IntroductionPageProps) {
       style={{
         fontFamily: "'Poppins', sans-serif",
         minHeight: "100vh",
-        background: "#F0EDE8",
+        background: "#F5F0E8",
         paddingBottom: "40px",
       }}
     >
       {/* Header */}
       <div
         style={{
-          background: "linear-gradient(135deg, #0A0F2C 0%, #1a2a5e 100%)",
+          background: "linear-gradient(135deg, #0D1B2A 0%, #1a2d45 100%)",
           padding: "16px 20px 20px",
           position: "sticky",
           top: 0,
@@ -249,7 +286,7 @@ export function IntroductionPage({ onBack }: IntroductionPageProps) {
                   lang === btn.key
                     ? "linear-gradient(135deg, #C9A84C, #b8941e)"
                     : "transparent",
-                color: lang === btn.key ? "#0A0F2C" : "rgba(201,168,76,0.7)",
+                color: lang === btn.key ? "#0D1B2A" : "rgba(201,168,76,0.7)",
                 fontSize: "12px",
                 fontWeight: lang === btn.key ? "700" : "500",
                 cursor: "pointer",
@@ -272,7 +309,7 @@ export function IntroductionPage({ onBack }: IntroductionPageProps) {
         {/* Title Card */}
         <div
           style={{
-            background: "linear-gradient(135deg, #0A0F2C 0%, #1a2a5e 100%)",
+            background: "linear-gradient(135deg, #0D1B2A 0%, #1a2d45 100%)",
             borderRadius: "20px",
             padding: "24px 20px",
             marginBottom: "16px",
@@ -320,12 +357,12 @@ export function IntroductionPage({ onBack }: IntroductionPageProps) {
         {/* Intro Paragraph */}
         <div
           style={{
-            background: "white",
+            background: "#FFFFFF",
             borderRadius: "16px",
             padding: "18px",
             marginBottom: "16px",
-            boxShadow: "0 2px 12px rgba(0,0,0,0.06)",
-            border: "1px solid rgba(201,168,76,0.1)",
+            boxShadow: "0 2px 12px rgba(13,27,42,0.08)",
+            border: "1px solid rgba(201,168,76,0.12)",
           }}
         >
           <p
@@ -341,20 +378,103 @@ export function IntroductionPage({ onBack }: IntroductionPageProps) {
           </p>
         </div>
 
-        {/* Features */}
+        {/* PWA Install Guide */}
         <div
           style={{
-            background: "white",
+            background: "#FFFFFF",
             borderRadius: "16px",
             padding: "18px",
             marginBottom: "16px",
-            boxShadow: "0 2px 12px rgba(0,0,0,0.06)",
-            border: "1px solid rgba(201,168,76,0.1)",
+            boxShadow: "0 2px 12px rgba(13,27,42,0.08)",
+            border: "1px solid rgba(201,168,76,0.15)",
           }}
         >
           <h3
             style={{
-              color: "#0A0F2C",
+              color: "#0D1B2A",
+              fontFamily: c.font,
+              fontSize: "15px",
+              fontWeight: "700",
+              marginBottom: "14px",
+              marginTop: 0,
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+            }}
+          >
+            <span>📲</span> {guide.title}
+          </h3>
+          <div
+            style={{ display: "flex", flexDirection: "column", gap: "10px" }}
+          >
+            {guide.steps.map((step, idx) => (
+              <div
+                key={step.slice(0, 20)}
+                style={{
+                  display: "flex",
+                  alignItems: "flex-start",
+                  gap: "12px",
+                  padding: "10px 12px",
+                  borderRadius: "12px",
+                  background: "rgba(201,168,76,0.04)",
+                  border: "1px solid rgba(201,168,76,0.1)",
+                }}
+              >
+                <div
+                  style={{
+                    width: "24px",
+                    height: "24px",
+                    borderRadius: "50%",
+                    background: "linear-gradient(135deg, #0D1B2A, #1a2d45)",
+                    border: "2px solid #C9A84C",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    flexShrink: 0,
+                  }}
+                >
+                  <span
+                    style={{
+                      color: "#C9A84C",
+                      fontSize: "11px",
+                      fontWeight: "700",
+                      fontFamily: "'Poppins', sans-serif",
+                    }}
+                  >
+                    {idx + 1}
+                  </span>
+                </div>
+                <p
+                  style={{
+                    color: "#374151",
+                    fontFamily: c.font,
+                    fontSize: lang === "urdu" ? "15px" : "13px",
+                    margin: 0,
+                    lineHeight: 1.6,
+                    flex: 1,
+                  }}
+                >
+                  {step}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Features */}
+        <div
+          style={{
+            background: "#FFFFFF",
+            borderRadius: "16px",
+            padding: "18px",
+            marginBottom: "16px",
+            boxShadow: "0 2px 12px rgba(13,27,42,0.08)",
+            border: "1px solid rgba(201,168,76,0.12)",
+          }}
+        >
+          <h3
+            style={{
+              color: "#0D1B2A",
               fontFamily: c.font,
               fontSize: "15px",
               fontWeight: "700",
@@ -389,7 +509,7 @@ export function IntroductionPage({ onBack }: IntroductionPageProps) {
                 <div style={{ flex: 1 }}>
                   <p
                     style={{
-                      color: "#0A0F2C",
+                      color: "#0D1B2A",
                       fontFamily: c.font,
                       fontSize: "13px",
                       fontWeight: "600",
@@ -419,16 +539,16 @@ export function IntroductionPage({ onBack }: IntroductionPageProps) {
         <div
           style={{
             background:
-              "linear-gradient(135deg, rgba(16,185,129,0.06), rgba(16,185,129,0.02))",
+              "linear-gradient(135deg, rgba(13,27,42,0.04), rgba(201,168,76,0.04))",
             borderRadius: "16px",
             padding: "18px",
             marginBottom: "16px",
-            border: "1px solid rgba(16,185,129,0.2)",
+            border: "1px solid rgba(201,168,76,0.2)",
           }}
         >
           <h3
             style={{
-              color: "#059669",
+              color: "#0D1B2A",
               fontFamily: c.font,
               fontSize: "14px",
               fontWeight: "700",

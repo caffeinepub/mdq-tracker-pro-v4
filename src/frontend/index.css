@@ -4,6 +4,11 @@
 
 @layer base {
   :root {
+    /* 4-Color System */
+    --app-navy: #0D1B2A;
+    --app-gold: #C9A84C;
+    --app-cream: #F5F0E8;
+    --app-white: #FFFFFF;
     --radius: 0.75rem;
     /* Light Luxury Theme tokens */
     --background: 0.97 0.005 80;
@@ -47,7 +52,7 @@
     -webkit-tap-highlight-color: transparent;
   }
   body {
-    background-color: #F4F7F6;
+    background-color: #F5F0E8;
     color: #1a2035;
     min-height: 100vh;
     font-family: 'Poppins', 'Outfit', system-ui, -apple-system, sans-serif;
@@ -407,7 +412,7 @@ input[type="time"] { color-scheme: light; }
 
 /* ─── App background -- light with subtle warm tones ─── */
 .star-bg {
-  background-color: #F4F7F6;
+  background-color: #F5F0E8;
   background-image:
     radial-gradient(ellipse at 15% 20%, rgba(212, 175, 55, 0.05) 0%, transparent 45%),
     radial-gradient(ellipse at 85% 75%, rgba(16, 185, 129, 0.04) 0%, transparent 45%),

@@ -103,8 +103,9 @@ export function HistoryPage({ monthlyHistory }: HistoryPageProps) {
 
       {sortedDates.map((date, idx) => {
         const log = monthlyHistory[date];
-        const jamaatCount = PRAYER_NAMES.filter(
-          (p) => log.prayers[p] === "jamaat",
+        // Ada = single OR jamaat
+        const adaCount = PRAYER_NAMES.filter(
+          (p) => log.prayers[p] === "single" || log.prayers[p] === "jamaat",
         ).length;
         const qazaCount = PRAYER_NAMES.filter(
           (p) => log.prayers[p] === "qaza",
@@ -142,21 +143,21 @@ export function HistoryPage({ monthlyHistory }: HistoryPageProps) {
                     {formatDisplayDate(date)}
                   </span>
                   <div className="flex items-center gap-2 mt-1">
-                    {jamaatCount > 0 && (
+                    {adaCount > 0 && (
                       <span
-                        className="text-[10px] px-1.5 py-0.5 rounded-full"
+                        className="text-[10px] px-1.5 py-0.5 rounded-full font-semibold"
                         style={{
                           background: "rgba(5,150,105,0.08)",
                           color: "#059669",
                           fontFamily: "'Poppins', sans-serif",
                         }}
                       >
-                        ✦ {jamaatCount} Jamaat
+                        ✓ {adaCount} Ada
                       </span>
                     )}
                     {qazaCount > 0 && (
                       <span
-                        className="text-[10px] px-1.5 py-0.5 rounded-full"
+                        className="text-[10px] px-1.5 py-0.5 rounded-full font-semibold"
                         style={{
                           background: "rgba(220,38,38,0.06)",
                           color: "#dc2626",
@@ -166,7 +167,7 @@ export function HistoryPage({ monthlyHistory }: HistoryPageProps) {
                         ⚠ {qazaCount} Qaza
                       </span>
                     )}
-                    {jamaatCount === 0 && qazaCount === 0 && (
+                    {adaCount === 0 && qazaCount === 0 && (
                       <span
                         className="text-[10px]"
                         style={{

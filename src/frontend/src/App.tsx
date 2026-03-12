@@ -3,88 +3,61 @@ import { AdaaRecords } from "./components/mdq/AdaaRecords";
 import { BlogMode } from "./components/mdq/BlogMode";
 import { BottomNav } from "./components/mdq/BottomNav";
 import { DateClockStrip } from "./components/mdq/DateClockStrip";
+import { DuaPage } from "./components/mdq/DuaPage";
 import { DuaenModal } from "./components/mdq/DuaenModal";
-import { GracePeriod } from "./components/mdq/GracePeriod";
 import { Header } from "./components/mdq/Header";
 import { HistoryPage } from "./components/mdq/HistoryPage";
 import { Home } from "./components/mdq/Home";
+import { JournalPage } from "./components/mdq/JournalPage";
+import { MissingPage } from "./components/mdq/MissingPage";
 import { MonthlyAnalysis } from "./components/mdq/MonthlyAnalysis";
+import { NotificationOverlay } from "./components/mdq/NotificationOverlay";
 import { QazaVault } from "./components/mdq/QazaVault";
 import { Settings } from "./components/mdq/Settings";
 import { SplashScreen } from "./components/mdq/SplashScreen";
+import { TasbihPage } from "./components/mdq/TasbihPage";
 import { Toast } from "./components/mdq/Toast";
 import { useAppState } from "./hooks/useAppState";
 import type {
   AdvancedPrayerName,
+  NafilFormData,
   PrayerName,
   PrayerStatus,
+  SunnahStatus,
   TabName,
 } from "./types";
-
-function getMaleVoice(): SpeechSynthesisVoice | null {
-  const voices = window.speechSynthesis.getVoices();
-  const malePriority = [
-    (v: SpeechSynthesisVoice) =>
-      v.lang.startsWith("ur") && v.name.toLowerCase().includes("male"),
-    (v: SpeechSynthesisVoice) =>
-      v.lang.startsWith("hi") && v.name.toLowerCase().includes("male"),
-    (v: SpeechSynthesisVoice) => v.lang.startsWith("ur"),
-    (v: SpeechSynthesisVoice) => v.lang.startsWith("hi"),
-    (v: SpeechSynthesisVoice) =>
-      !v.name.toLowerCase().includes("female") &&
-      !v.name.toLowerCase().includes("woman") &&
-      !v.name.toLowerCase().includes("girl") &&
-      !v.name.toLowerCase().includes("zira") &&
-      !v.name.toLowerCase().includes("victoria") &&
-      !v.name.toLowerCase().includes("karen") &&
-      !v.name.toLowerCase().includes("samantha") &&
-      !v.name.toLowerCase().includes("moira") &&
-      !v.name.toLowerCase().includes("tessa"),
-  ];
-  for (const matcher of malePriority) {
-    const found = voices.find(matcher);
-    if (found) return found;
-  }
-  return voices[0] ?? null;
-}
-
-function speak(text: string) {
-  try {
-    if (!("speechSynthesis" in window)) return;
-    window.speechSynthesis.cancel();
-    const utter = new SpeechSynthesisUtterance(text);
-    utter.lang = "ur-PK";
-    utter.rate = 0.85;
-    utter.pitch = 0.9;
-    utter.volume = 1.0;
-    const trySpeak = () => {
-      const voice = getMaleVoice();
-      if (voice) utter.voice = voice;
-      window.speechSynthesis.speak(utter);
-    };
-    if (window.speechSynthesis.getVoices().length === 0) {
-      window.speechSynthesis.onvoiceschanged = () => {
-        window.speechSynthesis.onvoiceschanged = null;
-        trySpeak();
-      };
-    } else {
-      trySpeak();
-    }
-  } catch {
-    // Speech synthesis not available
-  }
-}
 
 function generateId() {
   return Math.random().toString(36).slice(2) + Date.now().toString(36);
 }
+
+function timeStrToMinutes(t: string): number {
+  const [h, m] = t.split(":").map(Number);
+  return h * 60 + m;
+}
+
+function minutesToTimeStr(mins: number): string {
+  const h = Math.floor(mins / 60) % 24;
+  const m = mins % 60;
+  const hh = h % 12 === 0 ? 12 : h % 12;
+  const ampm = h < 12 ? "AM" : "PM";
+  return `${hh}:${String(m).padStart(2, "0")} ${ampm}`;
+}
+
+const PRAYER_NAMES: PrayerName[] = ["Fajr", "Dhuhr", "Asr", "Maghrib", "Isha"];
 
 export default function App() {
   const [splashDone, setSplashDone] = useState(false);
   const [activeTab, setActiveTab] = useState<TabName>("home");
   const [toast, setToast] = useState({ message: "", visible: false, id: "" });
   const [duaenOpen, setDuaenOpen] = useState(false);
+  const [activeNotification, setActiveNotification] = useState<{
+    prayerName: string;
+    timeStr: string;
+    minutesBefore: number;
+  } | null>(null);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const notifTimers = useRef<ReturnType<typeof setTimeout>[]>([]);
 
   const {
     state,
@@ -93,14 +66,16 @@ export default function App() {
     markPrayer,
     markAdvancedPrayer,
     resolveQaza,
-    markGracePrayer,
-    convertExpiredGraceToQaza,
     updatePrayerTimes,
     updateAdvancedPrayerTimes,
+    updateJamaatTimes,
+    updateNotificationSettings,
     updateProfile,
-    incrementTasbih,
-    resetTasbih,
+    markSunnah,
+    markTaraweeh,
+    saveNafilForm,
     updateBlogArticles,
+    markMissingPrayer,
   } = useAppState();
 
   useEffect(() => {
@@ -119,6 +94,38 @@ export default function App() {
     return () => clearInterval(interval);
   }, [checkMidnightReset, checkExpiredGrace]);
 
+  // Notification scheduler
+  useEffect(() => {
+    for (const t of notifTimers.current) clearTimeout(t);
+    notifTimers.current = [];
+
+    if (!state.notificationSettings.enabled) return;
+
+    const now = new Date();
+    const nowMins = now.getHours() * 60 + now.getMinutes();
+
+    for (const prayer of PRAYER_NAMES) {
+      if (!state.notificationSettings.prayers[prayer]) continue;
+      const prayerMins = timeStrToMinutes(state.prayerTimes[prayer]);
+      const triggerMins = prayerMins - state.notificationSettings.minutesBefore;
+      const delayMs = (triggerMins - nowMins) * 60 * 1000;
+      if (delayMs <= 0) continue;
+      const timer = setTimeout(() => {
+        setActiveNotification({
+          prayerName: prayer,
+          timeStr: minutesToTimeStr(prayerMins),
+          minutesBefore: state.notificationSettings.minutesBefore,
+        });
+      }, delayMs);
+      notifTimers.current.push(timer);
+    }
+
+    return () => {
+      for (const t of notifTimers.current) clearTimeout(t);
+      notifTimers.current = [];
+    };
+  }, [state.prayerTimes, state.notificationSettings]);
+
   const showToast = useCallback((message: string) => {
     const id = generateId();
     if (toastTimer.current) clearTimeout(toastTimer.current);
@@ -136,58 +143,61 @@ export default function App() {
   const handleMarkPrayer = useCallback(
     (name: PrayerName, status: PrayerStatus) => {
       markPrayer(name, status);
-      if (status === "jamaat") {
-        speak("Alhamdulillah");
-        showToast("MaashaAllah, Alhamdulillah bol kar niyat bandhein. 🤲");
-      } else if (status === "single") {
-        speak("Allah qabool farmaye");
-        showToast("Taqabbal Allah, Agli baar InshaAllah Jamaat se. 🌙");
-      } else if (status === "qaza") {
-        speak("InshaAllah");
+      if (status === "jamaat")
+        showToast("MaashaAllah, Alhamdulillah! Jamaat ke saath ada ki. 🤲");
+      else if (status === "single")
+        showToast("Taqabbal Allah. Agli baar InshaAllah Jamaat se. 🌙");
+      else if (status === "qaza")
         showToast("Qaza Ada Karein, InshaAllah agli baar chhutne na paaye. ⏰");
-      }
     },
     [markPrayer, showToast],
+  );
+
+  const handleMarkSunnah = useCallback(
+    (key: string, status: SunnahStatus) => {
+      markSunnah(key, status);
+      if (status === "done") showToast("Alhamdulillah! Sunnah ada ho gayi. ✨");
+    },
+    [markSunnah, showToast],
+  );
+
+  const handleMarkTaraweeh = useCallback(
+    (count: number) => {
+      markTaraweeh(count);
+      showToast(`MaashaAllah! ${count} Rakat Taraweeh ada ki. 🌙`);
+    },
+    [markTaraweeh, showToast],
+  );
+
+  const handleMarkNafil = useCallback(
+    (name: AdvancedPrayerName, status: "done") => {
+      markAdvancedPrayer(name, status);
+      showToast(`Alhamdulillah! ${name} ada ho gayi. Allah Qabool Farmaye. 🤲`);
+    },
+    [markAdvancedPrayer, showToast],
+  );
+
+  const handleSaveNafilForm = useCallback(
+    (name: AdvancedPrayerName, data: NafilFormData) => {
+      saveNafilForm(name, data);
+    },
+    [saveNafilForm],
   );
 
   const handleResolveQaza = useCallback(
     (id: string) => {
       resolveQaza(id);
-      speak("Alhamdulillah");
       showToast("MaashaAllah! Qaza Ada Ho Gayi. Allah Qabool Farmaye. ✓");
     },
     [resolveQaza, showToast],
   );
 
-  const handleMarkGrace = useCallback(
-    (id: string, status: "single" | "jamaat") => {
-      markGracePrayer(id, status);
-      if (status === "jamaat") {
-        speak("Alhamdulillah");
-        showToast("MaashaAllah, Alhamdulillah bol kar niyat bandhein. 🤲");
-      } else {
-        speak("Allah qabool farmaye");
-        showToast("Taqabbal Allah, Agli baar InshaAllah Jamaat se. 🌙");
-      }
+  const handleMarkMissing = useCallback(
+    (date: string, prayer: PrayerName, status: "single" | "jamaat") => {
+      markMissingPrayer(date, prayer, status);
+      showToast(`Alhamdulillah! ${prayer} fix ho gayi. 🤲`);
     },
-    [markGracePrayer, showToast],
-  );
-
-  const handleConvertToQaza = useCallback(
-    (id: string) => {
-      convertExpiredGraceToQaza(id);
-      showToast("Qaza Vault mein add kar diya gaya. InshaAllah ada karein. 📋");
-    },
-    [convertExpiredGraceToQaza, showToast],
-  );
-
-  const handleMarkAdvanced = useCallback(
-    (name: AdvancedPrayerName, status: "single" | "jamaat") => {
-      markAdvancedPrayer(name, status);
-      speak("Alhamdulillah");
-      showToast(`MaashaAllah! ${name} ada ho gayi. Allah Qabool Farmaye. 🤲`);
-    },
-    [markAdvancedPrayer, showToast],
+    [markMissingPrayer, showToast],
   );
 
   const graceBadge = state.gracePeriod.length;
@@ -196,11 +206,14 @@ export default function App() {
     home: "Daily Dashboard",
     qaza: "Qaza Vault",
     adaa: "Adaa Records",
-    grace: "Grace Period",
+    grace: "Chhuti Hui Namazein",
     settings: "Settings",
     analysis: "Monthly Analysis",
     history: "Prayer History",
     blog: "Islamic Blog",
+    dua: "Dua Mode",
+    tasbih: "Tasbih Mode",
+    journal: "Daily Write",
   };
 
   const renderTab = () => {
@@ -210,9 +223,11 @@ export default function App() {
           <Home
             state={state}
             onMark={handleMarkPrayer}
-            onMarkAdvanced={handleMarkAdvanced}
-            onIncrementTasbih={incrementTasbih}
-            onResetTasbih={resetTasbih}
+            onMarkSunnah={handleMarkSunnah}
+            onMarkTaraweeh={handleMarkTaraweeh}
+            onMarkNafil={handleMarkNafil}
+            onSaveNafilForm={handleSaveNafilForm}
+            onNavigate={setActiveTab}
           />
         );
       case "qaza":
@@ -223,10 +238,10 @@ export default function App() {
         return <AdaaRecords records={state.adaaRecords} />;
       case "grace":
         return (
-          <GracePeriod
-            entries={state.gracePeriod}
-            onMark={handleMarkGrace}
-            onConvertToQaza={handleConvertToQaza}
+          <MissingPage
+            installDate={state.installDate}
+            monthlyHistory={state.monthlyHistory}
+            onMarkMissing={handleMarkMissing}
           />
         );
       case "settings":
@@ -234,9 +249,13 @@ export default function App() {
           <Settings
             prayerTimes={state.prayerTimes}
             advancedPrayerTimes={state.advancedPrayerTimes}
-            onSave={(times, advancedTimes) => {
+            jamaatTimes={state.jamaatTimes}
+            notificationSettings={state.notificationSettings}
+            onSave={(times, advancedTimes, jTimes, notifSettings) => {
               updatePrayerTimes(times);
               updateAdvancedPrayerTimes(advancedTimes);
+              updateJamaatTimes(jTimes);
+              updateNotificationSettings(notifSettings);
             }}
           />
         );
@@ -257,21 +276,23 @@ export default function App() {
             onUpdate={updateBlogArticles}
           />
         );
+      case "dua":
+        return <DuaPage />;
+      case "tasbih":
+        return <TasbihPage />;
+      case "journal":
+        return <JournalPage />;
     }
   };
 
   return (
     <>
-      {/* Splash Screen -- shown every time */}
       {!splashDone && <SplashScreen onEnter={() => setSplashDone(true)} />}
-
-      {/* Main App */}
       <div className="min-h-screen" style={{ background: "#F4F7F6" }}>
         <div
           className="mx-auto max-w-[430px] min-h-screen relative flex flex-col"
           style={{ background: "#F4F7F6" }}
         >
-          {/* Fixed Header */}
           <Header
             profileName={state.profileName}
             isNormalMode={state.isNormalMode}
@@ -279,15 +300,12 @@ export default function App() {
             onOpenDuaen={() => setDuaenOpen(true)}
           />
 
-          {/* Fixed sub-header: DateClockStrip + tab title */}
           <div
             className="fixed top-14 left-0 right-0 z-40"
             style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}
           >
             <div className="mx-auto max-w-[430px]">
-              {/* Date + Clock + Hijri strip */}
               <DateClockStrip />
-              {/* Tab title */}
               <div
                 style={{
                   background: "rgba(244,247,246,0.97)",
@@ -312,7 +330,6 @@ export default function App() {
             </div>
           </div>
 
-          {/* Main content -- padded for header + strip + tab title */}
           <main
             className="flex-1 overflow-y-auto px-4 pb-24"
             style={{
@@ -335,6 +352,16 @@ export default function App() {
           <DuaenModal open={duaenOpen} onClose={() => setDuaenOpen(false)} />
         </div>
       </div>
+
+      {/* Mid-screen Notification Overlay */}
+      {activeNotification && (
+        <NotificationOverlay
+          prayerName={activeNotification.prayerName}
+          timeStr={activeNotification.timeStr}
+          minutesBefore={activeNotification.minutesBefore}
+          onDismiss={() => setActiveNotification(null)}
+        />
+      )}
     </>
   );
 }

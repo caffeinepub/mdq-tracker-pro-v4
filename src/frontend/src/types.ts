@@ -2,6 +2,7 @@ export type PrayerName = "Fajr" | "Dhuhr" | "Asr" | "Maghrib" | "Isha";
 export type AdvancedPrayerName = "Tahajjud" | "Ishraq" | "Chasht" | "Awwabin";
 export type AllPrayerName = PrayerName | AdvancedPrayerName;
 export type PrayerStatus = "unmarked" | "single" | "jamaat" | "qaza";
+export type SunnahStatus = "unmarked" | "done";
 export type TabName =
   | "home"
   | "qaza"
@@ -10,11 +11,20 @@ export type TabName =
   | "settings"
   | "analysis"
   | "history"
-  | "blog";
+  | "blog"
+  | "dua"
+  | "tasbih"
+  | "journal";
 
 export interface PrayerTime {
   name: PrayerName;
   time: string;
+}
+
+export interface NafilFormData {
+  rakaat?: number;
+  surah?: string;
+  duaTopic?: string;
 }
 
 export interface DailyLog {
@@ -22,6 +32,9 @@ export interface DailyLog {
   prayers: Record<PrayerName, PrayerStatus>;
   advancedPrayers?: Record<AdvancedPrayerName, PrayerStatus>;
   journal?: string;
+  sunnah?: Record<string, SunnahStatus>;
+  taraweeh?: number;
+  nafilForms?: Partial<Record<AdvancedPrayerName, NafilFormData>>;
 }
 
 export interface QazaEntry {
@@ -53,9 +66,15 @@ export interface BlogArticle {
   category: string;
   content: string;
   isBookmarked?: boolean;
-  readProgress?: number; // 0-100
+  readProgress?: number;
   createdAt: string;
   isUserAdded?: boolean;
+}
+
+export interface NotificationSettings {
+  enabled: boolean;
+  minutesBefore: number;
+  prayers: Record<PrayerName, boolean>;
 }
 
 export interface AppState {
@@ -71,6 +90,9 @@ export interface AppState {
   monthlyHistory: Record<string, DailyLog>;
   tasbihs: Record<string, number>;
   blogArticles: BlogArticle[];
+  jamaatTimes: Record<PrayerName, string>;
+  installDate: string;
+  notificationSettings: NotificationSettings;
 }
 
 export interface ToastMessage {

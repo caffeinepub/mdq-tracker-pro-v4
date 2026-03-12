@@ -6,18 +6,15 @@ import type {
   BlogArticle,
   DailyLog,
   GracePeriodEntry,
+  NafilFormData,
+  NotificationSettings,
   PrayerName,
   PrayerStatus,
   QazaEntry,
+  SunnahStatus,
 } from "../types";
 
 const PRAYER_NAMES: PrayerName[] = ["Fajr", "Dhuhr", "Asr", "Maghrib", "Isha"];
-const _ADVANCED_PRAYER_NAMES: AdvancedPrayerName[] = [
-  "Tahajjud",
-  "Ishraq",
-  "Chasht",
-  "Awwabin",
-];
 
 const DEFAULT_PRAYER_TIMES: Record<PrayerName, string> = {
   Fajr: "05:00",
@@ -25,6 +22,14 @@ const DEFAULT_PRAYER_TIMES: Record<PrayerName, string> = {
   Asr: "16:30",
   Maghrib: "19:00",
   Isha: "20:30",
+};
+
+const DEFAULT_JAMAAT_TIMES: Record<PrayerName, string> = {
+  Fajr: "05:15",
+  Dhuhr: "13:15",
+  Asr: "16:45",
+  Maghrib: "19:10",
+  Isha: "20:45",
 };
 
 const DEFAULT_ADVANCED_PRAYER_TIMES: Record<AdvancedPrayerName, string> = {
@@ -49,6 +54,18 @@ const DEFAULT_ADVANCED_PRAYERS: Record<AdvancedPrayerName, PrayerStatus> = {
   Awwabin: "unmarked",
 };
 
+const DEFAULT_NOTIFICATION_SETTINGS: NotificationSettings = {
+  enabled: false,
+  minutesBefore: 10,
+  prayers: {
+    Fajr: true,
+    Dhuhr: true,
+    Asr: true,
+    Maghrib: true,
+    Isha: true,
+  },
+};
+
 const STORAGE_KEYS = {
   prayerTimes: "mdq_prayer_times",
   advancedPrayerTimes: "mdq_advanced_prayer_times",
@@ -62,6 +79,9 @@ const STORAGE_KEYS = {
   monthlyHistory: "mdq_monthly_history",
   tasbihs: "mdq_tasbihs",
   blogArticles: "mdq_blog_articles",
+  jamaatTimes: "mdq_jamaat_times",
+  installDate: "mdq_install_date",
+  notificationSettings: "mdq_notification_settings",
 };
 
 function getToday(): string {
@@ -82,7 +102,7 @@ function saveToStorage<T>(key: string, value: T): void {
   try {
     localStorage.setItem(key, JSON.stringify(value));
   } catch {
-    // ignore storage errors
+    // ignore
   }
 }
 
@@ -129,21 +149,42 @@ function initState(): AppState {
     STORAGE_KEYS.blogArticles,
     [],
   );
+  const jamaatTimes = loadFromStorage<Record<PrayerName, string>>(
+    STORAGE_KEYS.jamaatTimes,
+    DEFAULT_JAMAAT_TIMES,
+  );
+  const notificationSettings = loadFromStorage<NotificationSettings>(
+    STORAGE_KEYS.notificationSettings,
+    DEFAULT_NOTIFICATION_SETTINGS,
+  );
 
-  // Initialize daily log for today if needed
+  // installDate: set once and never overwrite
+  let installDate = loadFromStorage<string>(STORAGE_KEYS.installDate, "");
+  if (!installDate) {
+    installDate = today;
+    saveToStorage(STORAGE_KEYS.installDate, installDate);
+  }
+
   let dailyLog = savedDailyLog;
   if (!dailyLog || dailyLog.date !== today) {
     dailyLog = {
       date: today,
       prayers: { ...DEFAULT_PRAYERS },
       advancedPrayers: { ...DEFAULT_ADVANCED_PRAYERS },
+      sunnah: {},
+      taraweeh: 0,
+      nafilForms: {},
     };
-  } else if (!dailyLog.advancedPrayers) {
-    // Migration: add advancedPrayers if missing
-    dailyLog = {
-      ...dailyLog,
-      advancedPrayers: { ...DEFAULT_ADVANCED_PRAYERS },
-    };
+  } else {
+    if (!dailyLog.advancedPrayers)
+      dailyLog = {
+        ...dailyLog,
+        advancedPrayers: { ...DEFAULT_ADVANCED_PRAYERS },
+      };
+    if (!dailyLog.sunnah) dailyLog = { ...dailyLog, sunnah: {} };
+    if (dailyLog.taraweeh === undefined)
+      dailyLog = { ...dailyLog, taraweeh: 0 };
+    if (!dailyLog.nafilForms) dailyLog = { ...dailyLog, nafilForms: {} };
   }
 
   return {
@@ -159,13 +200,15 @@ function initState(): AppState {
     monthlyHistory,
     tasbihs,
     blogArticles,
+    jamaatTimes,
+    installDate,
+    notificationSettings,
   };
 }
 
 export function useAppState() {
   const [state, setStateRaw] = useState<AppState>(initState);
 
-  // Persist to localStorage on every change
   const setState = useCallback((updater: (prev: AppState) => AppState) => {
     setStateRaw((prev) => {
       const next = updater(prev);
@@ -181,290 +224,246 @@ export function useAppState() {
       saveToStorage(STORAGE_KEYS.monthlyHistory, next.monthlyHistory);
       saveToStorage(STORAGE_KEYS.tasbihs, next.tasbihs);
       saveToStorage(STORAGE_KEYS.blogArticles, next.blogArticles);
+      saveToStorage(STORAGE_KEYS.jamaatTimes, next.jamaatTimes);
+      saveToStorage(STORAGE_KEYS.installDate, next.installDate);
+      saveToStorage(
+        STORAGE_KEYS.notificationSettings,
+        next.notificationSettings,
+      );
       return next;
     });
   }, []);
 
-  // Midnight reset logic
   const checkMidnightReset = useCallback(() => {
     const today = getToday();
     setStateRaw((prev) => {
       if (prev.lastResetDate === today) return prev;
-
-      // Move unmarked prayers from yesterday to grace period
       const newGracePeriod = [...prev.gracePeriod];
       const newQazaVault = [...prev.qazaVault];
 
       if (prev.dailyLog && prev.dailyLog.date !== today) {
         const yesterday = prev.dailyLog.date;
-        const expiresAt = new Date(yesterday);
-        expiresAt.setDate(expiresAt.getDate() + 2); // 24h after midnight of missed date
+        const expiresAt =
+          new Date(`${yesterday}T23:59:59`).getTime() + 24 * 60 * 60 * 1000;
+        const expiresAtStr = new Date(expiresAt).toISOString();
 
-        for (const pName of PRAYER_NAMES) {
-          const status = prev.dailyLog!.prayers[pName];
-          if (status === "unmarked") {
-            // Check if grace period entry already exists
-            const exists = newGracePeriod.some(
-              (g) => g.date === yesterday && g.prayerName === pName,
-            );
-            if (!exists) {
-              newGracePeriod.push({
-                id: `${yesterday}-${pName}-${Date.now()}`,
-                date: yesterday,
-                prayerName: pName,
-                expiresAt: expiresAt.toISOString(),
-              });
-            }
-          }
-        }
-      }
-
-      // Check expired grace period entries -> convert to qaza
-      const now = new Date();
-      const stillGrace: GracePeriodEntry[] = [];
-      for (const entry of newGracePeriod) {
-        if (new Date(entry.expiresAt) < now) {
-          // Expired -> convert to qaza
-          const alreadyInVault = newQazaVault.some(
-            (q) =>
-              q.missedDate === entry.date &&
-              q.prayerName === entry.prayerName &&
-              q.status === "pending",
-          );
-          if (!alreadyInVault) {
-            newQazaVault.push({
-              id: `qaza-${entry.date}-${entry.prayerName}-${Date.now()}`,
-              prayerName: entry.prayerName,
-              missedDate: entry.date,
-              missedTime: prev.prayerTimes[entry.prayerName],
-              status: "pending",
+        for (const p of PRAYER_NAMES) {
+          if (prev.dailyLog && prev.dailyLog.prayers[p] === "unmarked") {
+            newGracePeriod.push({
+              id: Math.random().toString(36).slice(2),
+              date: yesterday,
+              prayerName: p,
+              expiresAt: expiresAtStr,
             });
           }
-        } else {
-          stillGrace.push(entry);
         }
-      }
 
-      // Save previous day to monthly history
-      const newMonthlyHistory = { ...prev.monthlyHistory };
-      if (prev.dailyLog && prev.dailyLog.date !== today) {
-        newMonthlyHistory[prev.dailyLog.date] = prev.dailyLog;
-      }
-
-      const next: AppState = {
-        ...prev,
-        dailyLog: {
+        const newHistory = {
+          ...prev.monthlyHistory,
+          [yesterday]: prev.dailyLog,
+        };
+        const newDailyLog: DailyLog = {
           date: today,
           prayers: { ...DEFAULT_PRAYERS },
           advancedPrayers: { ...DEFAULT_ADVANCED_PRAYERS },
-        },
-        gracePeriod: stillGrace,
-        qazaVault: newQazaVault,
-        lastResetDate: today,
-        monthlyHistory: newMonthlyHistory,
-      };
+          sunnah: {},
+          taraweeh: 0,
+          nafilForms: {},
+        };
 
-      // Persist immediately
-      saveToStorage(STORAGE_KEYS.dailyLog, next.dailyLog);
-      saveToStorage(STORAGE_KEYS.gracePeriod, next.gracePeriod);
-      saveToStorage(STORAGE_KEYS.qazaVault, next.qazaVault);
-      saveToStorage(STORAGE_KEYS.lastResetDate, next.lastResetDate);
-      saveToStorage(STORAGE_KEYS.monthlyHistory, next.monthlyHistory);
+        const next: AppState = {
+          ...prev,
+          dailyLog: newDailyLog,
+          gracePeriod: newGracePeriod,
+          qazaVault: newQazaVault,
+          monthlyHistory: newHistory,
+          lastResetDate: today,
+        };
+        saveToStorage(STORAGE_KEYS.dailyLog, next.dailyLog);
+        saveToStorage(STORAGE_KEYS.gracePeriod, next.gracePeriod);
+        saveToStorage(STORAGE_KEYS.qazaVault, next.qazaVault);
+        saveToStorage(STORAGE_KEYS.monthlyHistory, next.monthlyHistory);
+        saveToStorage(STORAGE_KEYS.lastResetDate, next.lastResetDate);
+        return next;
+      }
 
+      const next = { ...prev, lastResetDate: today };
+      saveToStorage(STORAGE_KEYS.lastResetDate, today);
       return next;
     });
   }, []);
 
-  // Check for expired grace entries periodically
   const checkExpiredGrace = useCallback(() => {
     setStateRaw((prev) => {
       const now = new Date();
-      const stillGrace: GracePeriodEntry[] = [];
+      const expired = prev.gracePeriod.filter(
+        (e) => new Date(e.expiresAt) < now,
+      );
+      if (expired.length === 0) return prev;
+
       const newQazaVault = [...prev.qazaVault];
-
-      for (const entry of prev.gracePeriod) {
-        if (new Date(entry.expiresAt) < now) {
-          const alreadyInVault = newQazaVault.some(
-            (q) =>
-              q.missedDate === entry.date &&
-              q.prayerName === entry.prayerName &&
-              q.status === "pending",
-          );
-          if (!alreadyInVault) {
-            newQazaVault.push({
-              id: `qaza-${entry.date}-${entry.prayerName}-${Date.now()}`,
-              prayerName: entry.prayerName,
-              missedDate: entry.date,
-              missedTime: prev.prayerTimes[entry.prayerName],
-              status: "pending",
-            });
-          }
-        } else {
-          stillGrace.push(entry);
-        }
+      for (const e of expired) {
+        newQazaVault.push({
+          id: Math.random().toString(36).slice(2),
+          prayerName: e.prayerName,
+          missedDate: e.date,
+          missedTime: "",
+          status: "pending",
+        });
       }
 
-      if (
-        stillGrace.length === prev.gracePeriod.length &&
-        newQazaVault.length === prev.qazaVault.length
-      ) {
-        return prev; // no change
-      }
-
-      const next = {
-        ...prev,
-        gracePeriod: stillGrace,
-        qazaVault: newQazaVault,
-      };
+      const remaining = prev.gracePeriod.filter(
+        (e) => new Date(e.expiresAt) >= now,
+      );
+      const next = { ...prev, gracePeriod: remaining, qazaVault: newQazaVault };
       saveToStorage(STORAGE_KEYS.gracePeriod, next.gracePeriod);
       saveToStorage(STORAGE_KEYS.qazaVault, next.qazaVault);
       return next;
     });
   }, []);
 
-  // Mark a prayer
   const markPrayer = useCallback(
-    (prayerName: PrayerName, status: PrayerStatus) => {
-      const today = getToday();
+    (name: PrayerName, status: PrayerStatus) => {
       setState((prev) => {
-        const currentLog = prev.dailyLog ?? {
-          date: today,
-          prayers: { ...DEFAULT_PRAYERS },
-          advancedPrayers: { ...DEFAULT_ADVANCED_PRAYERS },
+        if (!prev.dailyLog) return prev;
+        const newLog = {
+          ...prev.dailyLog,
+          prayers: { ...prev.dailyLog.prayers, [name]: status },
         };
-        const newPrayers = { ...currentLog.prayers, [prayerName]: status };
-        const newLog = { ...currentLog, date: today, prayers: newPrayers };
-        const newQazaVault = [...prev.qazaVault];
-
-        if (status === "qaza") {
-          const alreadyIn = newQazaVault.some(
-            (q) =>
-              q.missedDate === today &&
-              q.prayerName === prayerName &&
-              q.status === "pending",
-          );
-          if (!alreadyIn) {
-            newQazaVault.push({
-              id: `qaza-${today}-${prayerName}-${Date.now()}`,
-              prayerName,
-              missedDate: today,
-              missedTime: prev.prayerTimes[prayerName],
-              status: "pending",
-            });
-          }
-        }
-
-        return { ...prev, dailyLog: newLog, qazaVault: newQazaVault };
-      });
-    },
-    [setState],
-  );
-
-  // Mark an advanced (nafl) prayer
-  const markAdvancedPrayer = useCallback(
-    (prayerName: AdvancedPrayerName, status: "single" | "jamaat") => {
-      const today = getToday();
-      setState((prev) => {
-        const currentLog = prev.dailyLog ?? {
-          date: today,
-          prayers: { ...DEFAULT_PRAYERS },
-          advancedPrayers: { ...DEFAULT_ADVANCED_PRAYERS },
-        };
-        const newAdvanced = {
-          ...(currentLog.advancedPrayers ?? DEFAULT_ADVANCED_PRAYERS),
-          [prayerName]: status,
-        };
-        const newLog = { ...currentLog, advancedPrayers: newAdvanced };
         return { ...prev, dailyLog: newLog };
       });
     },
     [setState],
   );
 
-  // Resolve a qaza entry (Adaa done)
+  const markAdvancedPrayer = useCallback(
+    (name: AdvancedPrayerName, _status: "done") => {
+      setState((prev) => {
+        if (!prev.dailyLog) return prev;
+        const newLog = {
+          ...prev.dailyLog,
+          advancedPrayers: {
+            ...(prev.dailyLog.advancedPrayers ?? DEFAULT_ADVANCED_PRAYERS),
+            [name]: "single" as PrayerStatus,
+          },
+        };
+        return { ...prev, dailyLog: newLog };
+      });
+    },
+    [setState],
+  );
+
+  const markSunnah = useCallback(
+    (key: string, status: SunnahStatus) => {
+      setState((prev) => {
+        if (!prev.dailyLog) return prev;
+        const newLog = {
+          ...prev.dailyLog,
+          sunnah: { ...(prev.dailyLog.sunnah ?? {}), [key]: status },
+        };
+        return { ...prev, dailyLog: newLog };
+      });
+    },
+    [setState],
+  );
+
+  const markTaraweeh = useCallback(
+    (count: number) => {
+      setState((prev) => {
+        if (!prev.dailyLog) return prev;
+        const newLog = { ...prev.dailyLog, taraweeh: count };
+        return { ...prev, dailyLog: newLog };
+      });
+    },
+    [setState],
+  );
+
+  const saveNafilForm = useCallback(
+    (name: AdvancedPrayerName, data: NafilFormData) => {
+      setState((prev) => {
+        if (!prev.dailyLog) return prev;
+        const newLog = {
+          ...prev.dailyLog,
+          nafilForms: { ...(prev.dailyLog.nafilForms ?? {}), [name]: data },
+        };
+        return { ...prev, dailyLog: newLog };
+      });
+    },
+    [setState],
+  );
+
   const resolveQaza = useCallback(
-    (qazaId: string) => {
-      const resolvedAt = new Date().toLocaleString("en-GB", {
-        day: "2-digit",
-        month: "short",
-        year: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-      });
-
+    (id: string) => {
       setState((prev) => {
-        const entry = prev.qazaVault.find((q) => q.id === qazaId);
+        const entry = prev.qazaVault.find((e) => e.id === id);
         if (!entry) return prev;
-
-        const updatedVault = prev.qazaVault.map((q) =>
-          q.id === qazaId
-            ? { ...q, status: "resolved" as const, resolvedAt }
-            : q,
+        const newVault = prev.qazaVault.map((e) =>
+          e.id === id
+            ? {
+                ...e,
+                status: "resolved" as const,
+                resolvedAt: new Date().toISOString(),
+              }
+            : e,
         );
-
-        const newAdaaRecord: AdaaRecord = {
-          id: `adaa-${qazaId}-${Date.now()}`,
-          prayerName: entry.prayerName,
-          missedDate: entry.missedDate,
-          resolvedAt,
-        };
-
-        return {
-          ...prev,
-          qazaVault: updatedVault,
-          adaaRecords: [newAdaaRecord, ...prev.adaaRecords],
-        };
+        const newAdaa: AdaaRecord[] = [
+          ...prev.adaaRecords,
+          {
+            id: Math.random().toString(36).slice(2),
+            prayerName: entry.prayerName,
+            missedDate: entry.missedDate,
+            resolvedAt: new Date().toISOString(),
+          },
+        ];
+        return { ...prev, qazaVault: newVault, adaaRecords: newAdaa };
       });
     },
     [setState],
   );
 
-  // Mark grace period prayer
   const markGracePrayer = useCallback(
-    (entryId: string, _status: "single" | "jamaat") => {
+    (id: string, status: "single" | "jamaat") => {
       setState((prev) => {
-        const newGrace = prev.gracePeriod.filter((g) => g.id !== entryId);
-        return { ...prev, gracePeriod: newGrace };
-      });
-    },
-    [setState],
-  );
-
-  // Convert expired grace to qaza
-  const convertExpiredGraceToQaza = useCallback(
-    (entryId: string) => {
-      setState((prev) => {
-        const entry = prev.gracePeriod.find((g) => g.id === entryId);
+        const entry = prev.gracePeriod.find((e) => e.id === id);
         if (!entry) return prev;
-
-        const newGrace = prev.gracePeriod.filter((g) => g.id !== entryId);
-        const alreadyInVault = prev.qazaVault.some(
-          (q) =>
-            q.missedDate === entry.date &&
-            q.prayerName === entry.prayerName &&
-            q.status === "pending",
-        );
-
-        const newQazaVault = alreadyInVault
-          ? prev.qazaVault
-          : [
-              ...prev.qazaVault,
-              {
-                id: `qaza-${entry.date}-${entry.prayerName}-${Date.now()}`,
-                prayerName: entry.prayerName,
-                missedDate: entry.date,
-                missedTime: prev.prayerTimes[entry.prayerName],
-                status: "pending" as const,
-              },
-            ];
-
-        return { ...prev, gracePeriod: newGrace, qazaVault: newQazaVault };
+        const remaining = prev.gracePeriod.filter((e) => e.id !== id);
+        const newHistory = { ...prev.monthlyHistory };
+        const dateLog = newHistory[entry.date] ?? {
+          date: entry.date,
+          prayers: { ...DEFAULT_PRAYERS },
+        };
+        newHistory[entry.date] = {
+          ...dateLog,
+          prayers: { ...dateLog.prayers, [entry.prayerName]: status },
+        };
+        return { ...prev, gracePeriod: remaining, monthlyHistory: newHistory };
       });
     },
     [setState],
   );
 
-  // Update prayer times
+  const convertExpiredGraceToQaza = useCallback(
+    (id: string) => {
+      setState((prev) => {
+        const entry = prev.gracePeriod.find((e) => e.id === id);
+        if (!entry) return prev;
+        const remaining = prev.gracePeriod.filter((e) => e.id !== id);
+        const newVault: QazaEntry[] = [
+          ...prev.qazaVault,
+          {
+            id: Math.random().toString(36).slice(2),
+            prayerName: entry.prayerName,
+            missedDate: entry.date,
+            missedTime: "",
+            status: "pending",
+          },
+        ];
+        return { ...prev, gracePeriod: remaining, qazaVault: newVault };
+      });
+    },
+    [setState],
+  );
+
   const updatePrayerTimes = useCallback(
     (times: Record<PrayerName, string>) => {
       setState((prev) => ({ ...prev, prayerTimes: times }));
@@ -472,7 +471,6 @@ export function useAppState() {
     [setState],
   );
 
-  // Update advanced prayer times
   const updateAdvancedPrayerTimes = useCallback(
     (times: Record<AdvancedPrayerName, string>) => {
       setState((prev) => ({ ...prev, advancedPrayerTimes: times }));
@@ -480,36 +478,63 @@ export function useAppState() {
     [setState],
   );
 
-  // Update profile
-  const updateProfile = useCallback(
-    (name: string, isNormalMode: boolean) => {
-      setState((prev) => ({ ...prev, profileName: name, isNormalMode }));
+  const updateJamaatTimes = useCallback(
+    (times: Record<PrayerName, string>) => {
+      setState((prev) => ({ ...prev, jamaatTimes: times }));
     },
     [setState],
   );
 
-  // Increment tasbih counter for today
-  const incrementTasbih = useCallback(() => {
-    const today = getToday();
-    setState((prev) => {
-      const current = prev.tasbihs[today] ?? 0;
-      return { ...prev, tasbihs: { ...prev.tasbihs, [today]: current + 1 } };
-    });
-  }, [setState]);
+  const updateNotificationSettings = useCallback(
+    (settings: NotificationSettings) => {
+      setState((prev) => ({ ...prev, notificationSettings: settings }));
+    },
+    [setState],
+  );
 
-  // Reset tasbih counter for today
-  const resetTasbih = useCallback(() => {
-    const today = getToday();
-    setState((prev) => ({
-      ...prev,
-      tasbihs: { ...prev.tasbihs, [today]: 0 },
-    }));
-  }, [setState]);
+  const updateProfile = useCallback(
+    (name: string, isNormal: boolean) => {
+      setState((prev) => ({
+        ...prev,
+        profileName: name,
+        isNormalMode: isNormal,
+      }));
+    },
+    [setState],
+  );
 
-  // Update blog articles
   const updateBlogArticles = useCallback(
     (articles: BlogArticle[]) => {
       setState((prev) => ({ ...prev, blogArticles: articles }));
+    },
+    [setState],
+  );
+
+  const markMissingPrayer = useCallback(
+    (date: string, prayer: PrayerName, status: "single" | "jamaat") => {
+      setState((prev) => {
+        const newHistory = { ...prev.monthlyHistory };
+        const existingLog = newHistory[date];
+        if (existingLog) {
+          newHistory[date] = {
+            ...existingLog,
+            prayers: { ...existingLog.prayers, [prayer]: status },
+          };
+        } else {
+          newHistory[date] = {
+            date,
+            prayers: {
+              Fajr: "unmarked",
+              Dhuhr: "unmarked",
+              Asr: "unmarked",
+              Maghrib: "unmarked",
+              Isha: "unmarked",
+              [prayer]: status,
+            },
+          };
+        }
+        return { ...prev, monthlyHistory: newHistory };
+      });
     },
     [setState],
   );
@@ -525,9 +550,13 @@ export function useAppState() {
     convertExpiredGraceToQaza,
     updatePrayerTimes,
     updateAdvancedPrayerTimes,
+    updateJamaatTimes,
+    updateNotificationSettings,
     updateProfile,
-    incrementTasbih,
-    resetTasbih,
+    markSunnah,
+    markTaraweeh,
+    saveNafilForm,
     updateBlogArticles,
+    markMissingPrayer,
   };
 }

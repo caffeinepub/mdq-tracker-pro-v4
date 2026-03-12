@@ -74,7 +74,7 @@ export function SplashScreen({ onEnter }: SplashScreenProps) {
         }}
       />
 
-      {/* Star particles -- deterministic positions */}
+      {/* Star particles */}
       {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].map((i) => (
         <div
           key={`star-${i}`}
@@ -153,7 +153,7 @@ export function SplashScreen({ onEnter }: SplashScreenProps) {
                 }}
               />
             ))}
-            <div style={{ fontSize: "36px", lineHeight: 1 }}>🕋</div>
+            <div style={{ fontSize: "36px", lineHeight: 1 }}>🕌</div>
           </div>
         </div>
 
@@ -175,7 +175,7 @@ export function SplashScreen({ onEnter }: SplashScreenProps) {
             textAlign: "center",
           }}
         >
-          Tracker Pro
+          NAMAZ TRACKER
         </h1>
 
         {/* Spiritual message */}

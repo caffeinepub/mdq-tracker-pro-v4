@@ -1,0 +1,26 @@
+{
+  "name": "NAMAZ TRACKER",
+  "short_name": "NAMAZ",
+  "description": "Premium Islamic Prayer Tracker - Namaz Track karein Jamaat, Single aur Qaza ke saath",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0f172a",
+  "theme_color": "#D4AF37",
+  "icons": [
+    {
+      "src": "/assets/generated/icon-192.dim_192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/assets/generated/icon-512.dim_512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["lifestyle", "utilities"],
+  "lang": "ur"
+}

@@ -1,13 +1,21 @@
+import { Switch } from "@/components/ui/switch";
 import {
   AlertCircle,
+  Bell,
+  BellOff,
   CheckCircle,
   Loader2,
   MapPin,
   Save,
   Settings as SettingsIcon,
+  Users,
 } from "lucide-react";
 import { useState } from "react";
-import type { AdvancedPrayerName, PrayerName } from "../../types";
+import type {
+  AdvancedPrayerName,
+  NotificationSettings,
+  PrayerName,
+} from "../../types";
 
 const PRAYER_NAMES: PrayerName[] = ["Fajr", "Dhuhr", "Asr", "Maghrib", "Isha"];
 const ADVANCED_PRAYER_NAMES: AdvancedPrayerName[] = [
@@ -34,9 +42,13 @@ const ADVANCED_EMOJI: Record<AdvancedPrayerName, string> = {
 interface SettingsProps {
   prayerTimes: Record<PrayerName, string>;
   advancedPrayerTimes: Record<AdvancedPrayerName, string>;
+  jamaatTimes: Record<PrayerName, string>;
+  notificationSettings: NotificationSettings;
   onSave: (
     times: Record<PrayerName, string>,
     advancedTimes: Record<AdvancedPrayerName, string>,
+    jamaatTimes: Record<PrayerName, string>,
+    notifSettings: NotificationSettings,
   ) => void;
 }
 
@@ -58,6 +70,8 @@ function parseAladhanTime(timeStr: string): string {
 export function Settings({
   prayerTimes,
   advancedPrayerTimes,
+  jamaatTimes,
+  notificationSettings,
   onSave,
 }: SettingsProps) {
   const [localTimes, setLocalTimes] = useState<Record<PrayerName, string>>({
@@ -66,6 +80,13 @@ export function Settings({
   const [localAdvancedTimes, setLocalAdvancedTimes] = useState<
     Record<AdvancedPrayerName, string>
   >({ ...advancedPrayerTimes });
+  const [localJamaatTimes, setLocalJamaatTimes] = useState<
+    Record<PrayerName, string>
+  >({ ...jamaatTimes });
+  const [localNotif, setLocalNotif] = useState<NotificationSettings>({
+    ...notificationSettings,
+    prayers: { ...notificationSettings.prayers },
+  });
   const [fetchStatus, setFetchStatus] = useState<FetchStatus>("idle");
   const [fetchError, setFetchError] = useState("");
   const [saved, setSaved] = useState(false);
@@ -83,8 +104,13 @@ export function Settings({
     setSaved(false);
   };
 
+  const handleJamaatTimeChange = (prayer: PrayerName, value: string) => {
+    setLocalJamaatTimes((prev) => ({ ...prev, [prayer]: value }));
+    setSaved(false);
+  };
+
   const handleSave = () => {
-    onSave(localTimes, localAdvancedTimes);
+    onSave(localTimes, localAdvancedTimes, localJamaatTimes, localNotif);
     setSaved(true);
     setTimeout(() => setSaved(false), 2500);
   };
@@ -221,13 +247,13 @@ export function Settings({
         )}
       </div>
 
-      {/* Prayer Time Inputs */}
+      {/* Manual Prayer Time Inputs */}
       <div className="rounded-2xl p-4 space-y-4" style={cardStyle}>
         <p
           className="text-xs uppercase tracking-wider"
           style={{ color: "#8a9bb0", fontFamily: "'Poppins', sans-serif" }}
         >
-          Manual Prayer Times
+          Manual Prayer Times (Azan)
         </p>
         {PRAYER_NAMES.map((prayer) => (
           <div key={prayer} className="flex items-center justify-between gap-4">
@@ -257,12 +283,68 @@ export function Settings({
         ))}
       </div>
 
+      {/* Jamaat Times */}
+      <div
+        className="rounded-2xl p-4 space-y-4"
+        style={{
+          background: "#ffffff",
+          border: "1px solid rgba(5,150,105,0.15)",
+          boxShadow: "0 2px 12px rgba(0,0,0,0.05)",
+        }}
+      >
+        <div className="flex items-center gap-2">
+          <Users size={14} style={{ color: "#059669" }} />
+          <p
+            className="text-xs uppercase tracking-wider"
+            style={{
+              color: "rgba(5,150,105,0.8)",
+              fontFamily: "'Poppins', sans-serif",
+            }}
+          >
+            Jamaat Times (Masjid)
+          </p>
+        </div>
+        <p
+          className="text-[11px] -mt-2"
+          style={{ color: "#8a9bb0", fontFamily: "'Poppins', sans-serif" }}
+        >
+          Apne masjid ki jamaat ka waqt set karein
+        </p>
+        {PRAYER_NAMES.map((prayer) => (
+          <div key={prayer} className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3 min-w-0 flex-1">
+              <span className="text-xl flex-shrink-0">
+                {PRAYER_EMOJI[prayer]}
+              </span>
+              <label htmlFor={`jamaat-time-${prayer}`} style={labelStyle}>
+                {prayer}
+              </label>
+            </div>
+            <input
+              id={`jamaat-time-${prayer}`}
+              type="time"
+              value={localJamaatTimes[prayer]}
+              onChange={(e) => handleJamaatTimeChange(prayer, e.target.value)}
+              data-ocid={`settings.${prayer.toLowerCase()}.input`}
+              className="px-3 py-2 rounded-xl text-sm font-mono font-medium"
+              style={{
+                background: "rgba(5,150,105,0.05)",
+                border: "1px solid rgba(5,150,105,0.2)",
+                minWidth: "110px",
+                colorScheme: "light",
+                color: "#1a2035",
+              }}
+            />
+          </div>
+        ))}
+      </div>
+
       {/* Advanced Prayer Times */}
       <div
         className="rounded-2xl p-4 space-y-4"
         style={{
           background: "#ffffff",
-          border: "1px solid rgba(5,150,105,0.12)",
+          border: "1px solid rgba(212,175,55,0.1)",
           boxShadow: "0 2px 12px rgba(0,0,0,0.05)",
         }}
       >
@@ -311,6 +393,144 @@ export function Settings({
         ))}
       </div>
 
+      {/* Notification Settings */}
+      <div
+        className="rounded-2xl p-4 space-y-4"
+        style={{
+          background: "#ffffff",
+          border: "1px solid rgba(212,175,55,0.15)",
+          boxShadow: "0 2px 12px rgba(0,0,0,0.05)",
+        }}
+      >
+        <div className="flex items-center gap-2">
+          {localNotif.enabled ? (
+            <Bell size={14} style={{ color: "#b8941e" }} />
+          ) : (
+            <BellOff size={14} style={{ color: "#8a9bb0" }} />
+          )}
+          <p
+            className="text-xs uppercase tracking-wider"
+            style={{ color: "#8a9bb0", fontFamily: "'Poppins', sans-serif" }}
+          >
+            Notification Settings
+          </p>
+        </div>
+
+        {/* Master toggle */}
+        <div className="flex items-center justify-between">
+          <div>
+            <p style={{ ...labelStyle, fontSize: "13px" }}>
+              Enable Notifications
+            </p>
+            <p
+              className="text-[11px] mt-0.5"
+              style={{ color: "#8a9bb0", fontFamily: "'Poppins', sans-serif" }}
+            >
+              Namaz waqt se pehle reminder
+            </p>
+          </div>
+          <Switch
+            checked={localNotif.enabled}
+            onCheckedChange={(v) =>
+              setLocalNotif((prev) => ({ ...prev, enabled: v }))
+            }
+            data-ocid="settings.notifications.switch"
+          />
+        </div>
+
+        {localNotif.enabled && (
+          <>
+            {/* Minutes before */}
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <p style={{ ...labelStyle, fontSize: "13px" }}>
+                  Minutes Before Azan
+                </p>
+                <span
+                  className="text-sm font-bold px-2.5 py-0.5 rounded-lg"
+                  style={{
+                    background: "rgba(212,175,55,0.1)",
+                    color: "#b8941e",
+                    fontFamily: "'Poppins', sans-serif",
+                  }}
+                >
+                  {localNotif.minutesBefore} min
+                </span>
+              </div>
+              <input
+                type="range"
+                min={3}
+                max={30}
+                step={1}
+                value={localNotif.minutesBefore}
+                onChange={(e) =>
+                  setLocalNotif((prev) => ({
+                    ...prev,
+                    minutesBefore: Number(e.target.value),
+                  }))
+                }
+                data-ocid="settings.minutes_before.input"
+                className="w-full"
+                style={{ accentColor: "#D4AF37" }}
+              />
+              <div className="flex justify-between mt-1">
+                <span
+                  className="text-[10px]"
+                  style={{
+                    color: "#b0bec5",
+                    fontFamily: "'Poppins', sans-serif",
+                  }}
+                >
+                  3 min
+                </span>
+                <span
+                  className="text-[10px]"
+                  style={{
+                    color: "#b0bec5",
+                    fontFamily: "'Poppins', sans-serif",
+                  }}
+                >
+                  30 min
+                </span>
+              </div>
+            </div>
+
+            {/* Per-prayer toggles */}
+            <div className="space-y-3">
+              <p
+                className="text-[11px] uppercase tracking-wider"
+                style={{
+                  color: "#b0bec5",
+                  fontFamily: "'Poppins', sans-serif",
+                }}
+              >
+                Kaunsi namazein?
+              </p>
+              {PRAYER_NAMES.map((prayer) => (
+                <div key={prayer} className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="text-base">{PRAYER_EMOJI[prayer]}</span>
+                    <span style={{ ...labelStyle, fontSize: "13px" }}>
+                      {prayer}
+                    </span>
+                  </div>
+                  <Switch
+                    checked={localNotif.prayers[prayer]}
+                    onCheckedChange={(v) =>
+                      setLocalNotif((prev) => ({
+                        ...prev,
+                        prayers: { ...prev.prayers, [prayer]: v },
+                      }))
+                    }
+                    data-ocid={`settings.notif.${prayer.toLowerCase()}.switch`}
+                  />
+                </div>
+              ))}
+            </div>
+          </>
+        )}
+      </div>
+
       {/* Save Button */}
       <button
         type="button"
@@ -331,7 +551,7 @@ export function Settings({
         ) : (
           <>
             <Save size={16} />
-            <span>Save All Prayer Times</span>
+            <span>Save All Settings</span>
           </>
         )}
       </button>

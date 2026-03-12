@@ -2,7 +2,7 @@ export type PrayerName = "Fajr" | "Dhuhr" | "Asr" | "Maghrib" | "Isha";
 export type AdvancedPrayerName = "Tahajjud" | "Ishraq" | "Chasht" | "Awwabin";
 export type AllPrayerName = PrayerName | AdvancedPrayerName;
 export type PrayerStatus = "unmarked" | "single" | "jamaat" | "qaza";
-export type SunnahStatus = "unmarked" | "done";
+export type SunnahStatus = "unmarked" | "done" | "inshallah";
 export type TabName =
   | "home"
   | "qaza"
@@ -14,7 +14,8 @@ export type TabName =
   | "blog"
   | "dua"
   | "tasbih"
-  | "journal";
+  | "journal"
+  | "introduction";
 
 export interface PrayerTime {
   name: PrayerName;

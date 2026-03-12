@@ -1,4 +1,4 @@
-import { BookOpen, Menu, Moon, Shield, Star, User, X } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
 interface HeaderProps {
@@ -12,7 +12,7 @@ export function Header({
   profileName,
   isNormalMode,
   onProfileUpdate,
-  onOpenDuaen,
+  onOpenDuaen: _onOpenDuaen,
 }: HeaderProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [editName, setEditName] = useState(profileName);
@@ -38,33 +38,112 @@ export function Header({
         className="fixed top-0 left-0 right-0 z-50"
         style={{
           paddingTop: "env(safe-area-inset-top, 0px)",
-          background: "rgba(255,255,255,0.97)",
+          background: "linear-gradient(135deg,#0A0F2C 0%,#111833 100%)",
           backdropFilter: "blur(24px) saturate(1.8)",
           WebkitBackdropFilter: "blur(24px) saturate(1.8)",
-          borderBottom: "1px solid rgba(212,175,55,0.15)",
-          boxShadow: "0 2px 16px rgba(0,0,0,0.06)",
+          borderBottom: "1px solid rgba(201,168,76,0.25)",
+          boxShadow: "0 2px 20px rgba(0,0,0,0.4)",
         }}
       >
         <div className="mx-auto max-w-[430px] flex items-center justify-between px-4 h-14">
-          {/* Hamburger */}
-          <button
-            type="button"
-            data-ocid="header.hamburger.button"
-            onClick={() => setSidebarOpen(true)}
-            className="flex items-center justify-center w-10 h-10 rounded-xl transition-all active:scale-95"
+          {/* 3D Mosque / Crescent Icon LEFT -- clean, no dots */}
+          <div
+            className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
             style={{
-              background: "rgba(212,175,55,0.08)",
-              border: "1px solid rgba(212,175,55,0.2)",
-              WebkitTapHighlightColor: "transparent",
+              background: "rgba(201,168,76,0.1)",
+              border: "1px solid rgba(201,168,76,0.25)",
             }}
           >
-            <Menu size={20} style={{ color: "#b8941e" }} />
-          </button>
+            <svg
+              width="28"
+              height="28"
+              viewBox="0 0 36 36"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+              role="img"
+            >
+              <title>Mosque icon</title>
+              <defs>
+                <linearGradient id="goldGrad" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0%" stopColor="#D4AF37" />
+                  <stop offset="100%" stopColor="#C9A84C" />
+                </linearGradient>
+                <filter id="glow">
+                  <feGaussianBlur stdDeviation="1.2" result="coloredBlur" />
+                  <feMerge>
+                    <feMergeNode in="coloredBlur" />
+                    <feMergeNode in="SourceGraphic" />
+                  </feMerge>
+                </filter>
+              </defs>
+              {/* Dome */}
+              <ellipse
+                cx="18"
+                cy="20"
+                rx="11"
+                ry="9"
+                fill="url(#goldGrad)"
+                filter="url(#glow)"
+                opacity="0.95"
+              />
+              {/* Main dome arch */}
+              <path d="M7 20 Q7 11 18 11 Q29 11 29 20" fill="url(#goldGrad)" />
+              {/* Center minaret */}
+              <rect
+                x="16.5"
+                y="5"
+                width="3"
+                height="7"
+                rx="1.5"
+                fill="url(#goldGrad)"
+              />
+              {/* Minaret top crescent */}
+              <path
+                d="M18 4 C16 4 15 3 15.5 2 C16 1 17 1.5 18 2 C19 1.5 20 1 20.5 2 C21 3 20 4 18 4Z"
+                fill="url(#goldGrad)"
+              />
+              {/* Left minaret */}
+              <rect
+                x="9"
+                y="13"
+                width="2.5"
+                height="5"
+                rx="1.2"
+                fill="url(#goldGrad)"
+                opacity="0.8"
+              />
+              {/* Right minaret */}
+              <rect
+                x="24.5"
+                y="13"
+                width="2.5"
+                height="5"
+                rx="1.2"
+                fill="url(#goldGrad)"
+                opacity="0.8"
+              />
+              {/* Door arch */}
+              <path
+                d="M15 28 L15 22 Q18 19 21 22 L21 28Z"
+                fill="rgba(10,15,44,0.7)"
+              />
+              {/* Base */}
+              <rect
+                x="6"
+                y="27"
+                width="24"
+                height="2.5"
+                rx="1.2"
+                fill="url(#goldGrad)"
+                opacity="0.9"
+              />
+              {/* Removed window dots for clean premium look */}
+            </svg>
+          </div>
 
-          {/* Title */}
+          {/* Title CENTER */}
           <div className="flex flex-col items-center gap-0">
             <div className="flex items-center gap-1.5">
-              <Moon size={12} style={{ color: "#b8941e" }} />
               <h1
                 className="font-bold text-sm tracking-[0.15em] shimmer-gold"
                 style={{
@@ -74,12 +153,11 @@ export function Header({
               >
                 NAMAZ TRACKER
               </h1>
-              <Star size={9} style={{ color: "#D4AF37" }} fill="#D4AF37" />
             </div>
             <p
               className="text-[8px] tracking-[0.18em] uppercase"
               style={{
-                color: "rgba(184,148,30,0.5)",
+                color: "rgba(201,168,76,0.55)",
                 letterSpacing: "0.2em",
                 fontFamily: "'Poppins', sans-serif",
               }}
@@ -88,22 +166,20 @@ export function Header({
             </p>
           </div>
 
-          {/* Profile icon */}
-          <div
-            className="w-10 h-10 rounded-xl flex items-center justify-center"
+          {/* Hamburger RIGHT */}
+          <button
+            type="button"
+            data-ocid="header.hamburger.button"
+            onClick={() => setSidebarOpen(true)}
+            className="flex items-center justify-center w-10 h-10 rounded-xl transition-all active:scale-95"
             style={{
-              background:
-                "linear-gradient(135deg, rgba(212,175,55,0.12) 0%, rgba(212,175,55,0.06) 100%)",
-              border: "1px solid rgba(212,175,55,0.3)",
+              background: "rgba(201,168,76,0.12)",
+              border: "1px solid rgba(201,168,76,0.3)",
+              WebkitTapHighlightColor: "transparent",
             }}
           >
-            <span
-              className="text-sm font-bold shimmer-gold"
-              style={{ fontFamily: "'Poppins', sans-serif" }}
-            >
-              {initial}
-            </span>
-          </div>
+            <Menu size={20} style={{ color: "#C9A84C" }} />
+          </button>
         </div>
       </header>
 
@@ -113,7 +189,7 @@ export function Header({
           ref={overlayRef}
           className="fixed inset-0 z-[100]"
           style={{
-            background: "rgba(0,0,0,0.35)",
+            background: "rgba(0,0,0,0.45)",
             backdropFilter: "blur(4px)",
           }}
           onClick={(e) => {
@@ -124,20 +200,33 @@ export function Header({
           }}
           role="presentation"
         >
+          {/* Sidebar slides from RIGHT */}
           <div
-            className="slide-in-left absolute inset-y-0 left-0 w-[300px] flex flex-col"
+            className="slide-in-right absolute inset-y-0 right-0 w-[300px] flex flex-col"
             style={{
               background: "#ffffff",
-              borderRight: "1px solid rgba(212,175,55,0.15)",
-              boxShadow: "4px 0 24px rgba(0,0,0,0.12)",
+              borderLeft: "1px solid rgba(201,168,76,0.15)",
+              boxShadow: "-4px 0 24px rgba(0,0,0,0.18)",
             }}
           >
             {/* Sidebar Header */}
             <div
               className="flex items-center justify-between px-5 pt-12 pb-4"
-              style={{ borderBottom: "1px solid rgba(212,175,55,0.1)" }}
+              style={{ borderBottom: "1px solid rgba(201,168,76,0.1)" }}
             >
-              <div className="flex flex-col">
+              <button
+                type="button"
+                data-ocid="sidebar.close.button"
+                onClick={handleClose}
+                className="w-8 h-8 rounded-full flex items-center justify-center transition-all active:scale-95"
+                style={{
+                  background: "rgba(0,0,0,0.06)",
+                  WebkitTapHighlightColor: "transparent",
+                }}
+              >
+                <X size={16} style={{ color: "#4a5568" }} />
+              </button>
+              <div className="flex flex-col items-end">
                 <h2
                   className="font-bold text-base shimmer-gold"
                   style={{
@@ -157,136 +246,36 @@ export function Header({
                   Created by MDQ
                 </p>
               </div>
-              <button
-                type="button"
-                data-ocid="sidebar.close.button"
-                onClick={handleClose}
-                className="w-8 h-8 rounded-full flex items-center justify-center transition-all active:scale-95"
-                style={{
-                  background: "rgba(0,0,0,0.06)",
-                  WebkitTapHighlightColor: "transparent",
-                }}
-              >
-                <X size={16} style={{ color: "#4a5568" }} />
-              </button>
             </div>
 
-            {/* Profile Section */}
+            {/* User Profile Section at TOP */}
             <div
               className="px-5 py-5"
-              style={{ borderBottom: "1px solid rgba(212,175,55,0.1)" }}
+              style={{ borderBottom: "1px solid rgba(201,168,76,0.1)" }}
             >
-              <div className="flex items-center gap-4 mb-4">
+              <div className="flex flex-col items-center gap-3 mb-4">
                 <div
-                  className="w-14 h-14 rounded-full flex items-center justify-center flex-shrink-0"
+                  className="w-16 h-16 rounded-full flex items-center justify-center"
                   style={{
                     background:
-                      "linear-gradient(135deg, rgba(212,175,55,0.15) 0%, rgba(212,175,55,0.08) 100%)",
-                    border: "2px solid rgba(212,175,55,0.35)",
+                      "linear-gradient(135deg, rgba(201,168,76,0.2) 0%, rgba(201,168,76,0.08) 100%)",
+                    border: "2px solid rgba(201,168,76,0.45)",
+                    boxShadow: "0 0 16px rgba(201,168,76,0.2)",
                   }}
                 >
-                  {editName ? (
-                    <span className="text-xl font-bold shimmer-gold">
-                      {initial}
-                    </span>
-                  ) : (
-                    <User size={24} style={{ color: "#b8941e" }} />
-                  )}
+                  <span className="text-2xl font-bold shimmer-gold">
+                    {initial}
+                  </span>
                 </div>
-                <div className="flex-1 min-w-0">
+                <div className="text-center">
                   <p
-                    className="text-xs mb-1"
+                    className="font-semibold text-sm"
                     style={{
-                      color: "#8a9bb0",
-                      fontFamily: "'Poppins', sans-serif",
-                    }}
-                  >
-                    Your Name
-                  </p>
-                  <input
-                    id="sidebar-profile-name"
-                    data-ocid="sidebar.profile.input"
-                    type="text"
-                    value={editName}
-                    onChange={(e) => setEditName(e.target.value)}
-                    placeholder="Enter your name"
-                    className="w-full bg-transparent text-sm font-medium border-none outline-none pb-1"
-                    style={{
-                      borderBottom: "1px solid rgba(212,175,55,0.3)",
                       color: "#1a2035",
                       fontFamily: "'Poppins', sans-serif",
                     }}
-                  />
-                </div>
-              </div>
-
-              {/* Mode Toggle */}
-              <div
-                className="rounded-xl overflow-hidden"
-                style={{ border: "1px solid rgba(212,175,55,0.15)" }}
-              >
-                <div
-                  className="flex items-center justify-between p-3"
-                  style={{
-                    background: localMode
-                      ? "rgba(212,175,55,0.06)"
-                      : "rgba(0,0,0,0.02)",
-                    borderBottom: "1px solid rgba(0,0,0,0.05)",
-                  }}
-                >
-                  <div>
-                    <p
-                      className="text-sm font-medium"
-                      style={{
-                        color: localMode ? "#b8941e" : "#8a9bb0",
-                        fontFamily: "'Poppins', sans-serif",
-                      }}
-                    >
-                      🕌 Normal Mode
-                    </p>
-                    <p
-                      className="text-[10px]"
-                      style={{
-                        color: "#8a9bb0",
-                        fontFamily: "'Poppins', sans-serif",
-                      }}
-                    >
-                      Sirf 5 Farz Namazein
-                    </p>
-                  </div>
-                  <button
-                    type="button"
-                    data-ocid="sidebar.mode.toggle"
-                    onClick={() => setLocalMode((m) => !m)}
-                    className="relative w-12 h-6 rounded-full transition-all duration-300 flex-shrink-0"
-                    style={{
-                      background: localMode
-                        ? "linear-gradient(135deg, #D4AF37, #b8941e)"
-                        : "rgba(0,0,0,0.12)",
-                      WebkitTapHighlightColor: "transparent",
-                    }}
                   >
-                    <span
-                      className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow-lg transition-all duration-300 ${localMode ? "left-[26px]" : "left-0.5"}`}
-                    />
-                  </button>
-                </div>
-                <div
-                  className="p-3"
-                  style={{
-                    background: !localMode
-                      ? "rgba(16,185,129,0.04)"
-                      : "transparent",
-                  }}
-                >
-                  <p
-                    className="text-[11px] font-semibold mb-0.5"
-                    style={{
-                      color: !localMode ? "#059669" : "#8a9bb0",
-                      fontFamily: "'Poppins', sans-serif",
-                    }}
-                  >
-                    ✨ Advanced Mode {!localMode ? "(Active)" : "(OFF)"}
+                    {editName || "Muslim User"}
                   </p>
                   <p
                     className="text-[10px]"
@@ -295,95 +284,51 @@ export function Header({
                       fontFamily: "'Poppins', sans-serif",
                     }}
                   >
-                    Tahajjud · Ishraq · Chasht · Awwabin
-                  </p>
-                  <p
-                    className="text-[10px] mt-1"
-                    style={{
-                      color: "#b0bec5",
-                      fontFamily: "'Poppins', sans-serif",
-                    }}
-                  >
-                    Normal toggle OFF karo → Advanced ON
+                    Tap below to edit name
                   </p>
                 </div>
               </div>
-            </div>
-
-            {/* Duaen Mode Button */}
-            <div
-              className="px-5 py-4"
-              style={{ borderBottom: "1px solid rgba(212,175,55,0.1)" }}
-            >
-              <button
-                type="button"
-                data-ocid="sidebar.duaen.button"
-                onClick={() => {
-                  handleClose();
-                  onOpenDuaen();
-                }}
-                className="w-full flex items-center gap-3 p-4 rounded-2xl transition-all active:scale-95 btn-duaen"
+              <div
+                className="rounded-xl px-3 py-2 flex items-center gap-2"
                 style={{
-                  background:
-                    "linear-gradient(135deg, rgba(212,175,55,0.1) 0%, rgba(212,175,55,0.04) 100%)",
-                  border: "1px solid rgba(212,175,55,0.3)",
-                  boxShadow: "0 2px 16px rgba(212,175,55,0.1)",
-                  animation: "pulse-gold 3s ease-in-out infinite",
-                  WebkitTapHighlightColor: "transparent",
+                  background: "rgba(201,168,76,0.06)",
+                  border: "1px solid rgba(201,168,76,0.2)",
                 }}
               >
-                <div
-                  className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                <span style={{ color: "#C9A84C", fontSize: "14px" }}>✏️</span>
+                <input
+                  id="sidebar-profile-name"
+                  data-ocid="sidebar.profile.input"
+                  type="text"
+                  value={editName}
+                  onChange={(e) => setEditName(e.target.value)}
+                  placeholder="Apna naam likhein"
+                  className="w-full bg-transparent text-sm font-medium border-none outline-none"
                   style={{
-                    background:
-                      "linear-gradient(135deg, rgba(212,175,55,0.2) 0%, rgba(212,175,55,0.08) 100%)",
-                    border: "1px solid rgba(212,175,55,0.4)",
+                    color: "#1a2035",
+                    fontFamily: "'Poppins', sans-serif",
                   }}
-                >
-                  <BookOpen size={18} style={{ color: "#b8941e" }} />
-                </div>
-                <div className="text-left flex-1">
-                  <p
-                    className="text-sm font-bold shimmer-gold tracking-wide"
-                    style={{ fontFamily: "'Amiri', serif" }}
-                  >
-                    Duaen Mode
-                  </p>
-                  <p
-                    className="text-[11px] mt-0.5"
-                    style={{
-                      color: "rgba(184,148,30,0.6)",
-                      fontFamily: "'Poppins', sans-serif",
-                    }}
-                  >
-                    Roz Marra ki Muqaddas Duaen ✶
-                  </p>
-                </div>
-                <Moon
-                  size={16}
-                  style={{ color: "#b8941e" }}
-                  className="breathe"
                 />
-              </button>
+              </div>
             </div>
 
-            {/* About Section */}
+            {/* About & Features */}
             <div className="px-5 py-5 flex-1 overflow-y-auto">
               <div className="mb-5">
                 <div className="flex items-center gap-2 mb-3">
-                  <Moon size={16} style={{ color: "#b8941e" }} />
+                  <span style={{ color: "#C9A84C" }}>🕌</span>
                   <h3
                     className="text-sm font-semibold uppercase tracking-wider shimmer-gold"
                     style={{ fontFamily: "'Poppins', sans-serif" }}
                   >
-                    About
+                    App ke Baare Mein
                   </h3>
                 </div>
                 <div
                   className="rounded-xl p-3"
                   style={{
-                    background: "rgba(212,175,55,0.04)",
-                    border: "1px solid rgba(212,175,55,0.1)",
+                    background: "rgba(201,168,76,0.04)",
+                    border: "1px solid rgba(201,168,76,0.1)",
                   }}
                 >
                   <p
@@ -394,18 +339,23 @@ export function Header({
                     }}
                   >
                     <strong style={{ color: "#1a2035" }}>NAMAZ TRACKER</strong>{" "}
-                    is a premium Islamic prayer tracking app. Track your daily
-                    Salah, maintain Qaza records, and never miss a prayer.
+                    ek premium Islamic prayer tracking app hai. Apni rozana ki
+                    namaz track karein, Qaza records rakhen, aur koi namaz kabhi
+                    na chhooren.
                   </p>
                 </div>
               </div>
 
               <div className="mb-5 space-y-2">
                 {[
-                  { icon: "🕌", label: "5 Daily Prayers" },
+                  { icon: "🕌", label: "5 Waqt ki Namazein" },
                   { icon: "⏰", label: "Time-Lock Engine" },
                   { icon: "📋", label: "Qaza Vault & Adaa Records" },
                   { icon: "🌙", label: "Grace Period System" },
+                  { icon: "📿", label: "Tasbih & Wazaif" },
+                  { icon: "🤲", label: "50+ Roz ki Duaen" },
+                  { icon: "✍️", label: "Daily Write Journal" },
+                  { icon: "📖", label: "Blog: Islamic Articles" },
                 ].map((f) => (
                   <div
                     key={f.label}
@@ -421,48 +371,25 @@ export function Header({
                 ))}
               </div>
 
-              <div>
-                <div className="flex items-center gap-2 mb-3">
-                  <Shield size={16} style={{ color: "#b8941e" }} />
-                  <h3
-                    className="text-sm font-semibold uppercase tracking-wider shimmer-gold"
-                    style={{ fontFamily: "'Poppins', sans-serif" }}
-                  >
-                    Terms & Conditions
-                  </h3>
-                </div>
-                <div
-                  className="rounded-xl p-3"
+              <div
+                className="rounded-xl p-3"
+                style={{
+                  background: "rgba(0,0,0,0.03)",
+                  border: "1px solid rgba(0,0,0,0.07)",
+                }}
+              >
+                <p
+                  className="text-[10px] leading-relaxed"
                   style={{
-                    background: "rgba(0,0,0,0.03)",
-                    border: "1px solid rgba(0,0,0,0.07)",
+                    color: "#8a9bb0",
+                    fontFamily: "'Poppins', sans-serif",
                   }}
                 >
-                  <p
-                    className="text-xs leading-relaxed"
-                    style={{
-                      color: "#8a9bb0",
-                      fontFamily: "'Poppins', sans-serif",
-                    }}
-                  >
-                    This app is for personal Islamic practice tracking. Prayer
-                    times are approximations — verify with your local Masjid.
-                    All data stored locally.
-                  </p>
-                </div>
+                  ⚖️ Yeh app personal Islamic practice ke liye hai. Namaz ke
+                  auwqaat approximate hain — apne masjid se verify karein. Sab
+                  data locally stored hai, koi cloud sync nahi.
+                </p>
               </div>
-            </div>
-
-            {/* Save button */}
-            <div className="px-5 py-4 safe-bottom">
-              <button
-                type="button"
-                onClick={handleClose}
-                className="w-full btn-gold py-3 text-sm font-semibold rounded-xl"
-                style={{ fontFamily: "'Poppins', sans-serif" }}
-              >
-                Save &amp; Close
-              </button>
             </div>
           </div>
         </div>

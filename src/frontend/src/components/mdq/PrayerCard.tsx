@@ -1,11 +1,6 @@
 import { ChevronDown, ChevronUp, Lock } from "lucide-react";
 import { useRef, useState } from "react";
-import type {
-  NafilFormData,
-  PrayerName,
-  PrayerStatus,
-  SunnahStatus,
-} from "../../types";
+import type { PrayerName, PrayerStatus, SunnahStatus } from "../../types";
 
 interface SunnahDef {
   key: string;
@@ -213,7 +208,7 @@ export function PrayerCard({
         boxShadow: isMarked
           ? `0 4px 20px ${statusConfig.glow}`
           : "0 2px 12px rgba(0,0,0,0.06)",
-        opacity: locked ? 0.6 : 1,
+        opacity: locked ? 0.65 : 1,
         overflow: "hidden",
       }}
     >
@@ -325,8 +320,8 @@ export function PrayerCard({
           </div>
         </div>
 
-        {/* Sunnah rows */}
-        {!locked && sunnahDefs.length > 0 && (
+        {/* Sunnah rows -- ALWAYS visible (not gated by locked) */}
+        {sunnahDefs.length > 0 && (
           <div className="mb-3 space-y-2">
             <p
               className="text-[9px] uppercase tracking-widest font-semibold mb-1"
@@ -339,6 +334,9 @@ export function PrayerCard({
             </p>
             {sunnahDefs.map((s) => {
               const done = sunnahData[s.key] === "done";
+              const inshallahDone = sunnahData[s.key] === "inshallah";
+              // Once ANY sunnah button is selected, BOTH are permanently locked
+              const isLocked = done || inshallahDone;
               return (
                 <div
                   key={s.key}
@@ -346,17 +344,25 @@ export function PrayerCard({
                   style={{
                     background: done
                       ? "rgba(16,185,129,0.06)"
-                      : "rgba(212,175,55,0.04)",
+                      : inshallahDone
+                        ? "rgba(212,175,55,0.08)"
+                        : "rgba(212,175,55,0.04)",
                     border: done
                       ? "1px solid rgba(16,185,129,0.2)"
-                      : "1px solid rgba(212,175,55,0.1)",
+                      : inshallahDone
+                        ? "1px solid rgba(212,175,55,0.35)"
+                        : "1px solid rgba(212,175,55,0.1)",
                   }}
                 >
                   <div>
                     <p
                       className="text-[11px] font-medium"
                       style={{
-                        color: done ? "#059669" : "#4a5568",
+                        color: done
+                          ? "#059669"
+                          : inshallahDone
+                            ? "#b8941e"
+                            : "#4a5568",
                         fontFamily: "'Poppins', sans-serif",
                       }}
                     >
@@ -374,31 +380,47 @@ export function PrayerCard({
                     </p>
                   </div>
                   <div className="flex gap-2">
+                    {/* InshaAllah button -- permanently locked once any selection made */}
                     <button
                       type="button"
-                      onClick={() =>
-                        onMarkSunnah?.(s.key, done ? "unmarked" : "unmarked")
-                      }
+                      disabled={isLocked}
+                      onClick={() => {
+                        if (!isLocked) {
+                          onMarkSunnah?.(s.key, "inshallah");
+                        }
+                      }}
                       className="text-[10px] px-2 py-1 rounded-lg font-medium transition-all active:scale-95"
                       style={{
-                        background: "rgba(212,175,55,0.1)",
-                        color: "#b8941e",
-                        border: "1px solid rgba(212,175,55,0.2)",
+                        opacity: isLocked ? (inshallahDone ? 1 : 0.35) : 1,
+                        cursor: isLocked ? "not-allowed" : "pointer",
+                        background: inshallahDone
+                          ? "linear-gradient(135deg,#C9A84C,#b8941e)"
+                          : "rgba(212,175,55,0.1)",
+                        color: inshallahDone ? "white" : "#b8941e",
+                        border: inshallahDone
+                          ? "none"
+                          : "1px solid rgba(212,175,55,0.2)",
                         fontFamily: "'Poppins', sans-serif",
                         WebkitTapHighlightColor: "transparent",
                         minWidth: "60px",
                         textAlign: "center",
                       }}
                     >
-                      InshaAllah
+                      {inshallahDone ? "✓ InshaAllah" : "InshaAllah"}
                     </button>
+                    {/* Alhamdulillah button -- permanently locked once any selection made */}
                     <button
                       type="button"
-                      onClick={() =>
-                        onMarkSunnah?.(s.key, done ? "unmarked" : "done")
-                      }
+                      disabled={isLocked}
+                      onClick={() => {
+                        if (!isLocked) {
+                          onMarkSunnah?.(s.key, "done");
+                        }
+                      }}
                       className="text-[10px] px-2 py-1 rounded-lg font-medium transition-all active:scale-95"
                       style={{
+                        opacity: isLocked ? (done ? 1 : 0.35) : 1,
+                        cursor: isLocked ? "not-allowed" : "pointer",
                         background: done
                           ? "linear-gradient(135deg,#10b981,#059669)"
                           : "rgba(16,185,129,0.08)",

@@ -1,3 +1,4 @@
+import { ChevronUp } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AdaaRecords } from "./components/mdq/AdaaRecords";
 import { BlogMode } from "./components/mdq/BlogMode";
@@ -8,6 +9,7 @@ import { DuaenModal } from "./components/mdq/DuaenModal";
 import { Header } from "./components/mdq/Header";
 import { HistoryPage } from "./components/mdq/HistoryPage";
 import { Home } from "./components/mdq/Home";
+import { IntroductionPage } from "./components/mdq/IntroductionPage";
 import { JournalPage } from "./components/mdq/JournalPage";
 import { MissingPage } from "./components/mdq/MissingPage";
 import { MonthlyAnalysis } from "./components/mdq/MonthlyAnalysis";
@@ -58,6 +60,8 @@ export default function App() {
   } | null>(null);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const notifTimers = useRef<ReturnType<typeof setTimeout>[]>([]);
+  const mainRef = useRef<HTMLElement>(null);
+  const [showScrollTop, setShowScrollTop] = useState(false);
 
   const {
     state,
@@ -93,6 +97,15 @@ export default function App() {
     }, 30_000);
     return () => clearInterval(interval);
   }, [checkMidnightReset, checkExpiredGrace]);
+
+  // Scroll-to-top listener
+  useEffect(() => {
+    const el = mainRef.current;
+    if (!el) return;
+    const handleScroll = () => setShowScrollTop(el.scrollTop > 300);
+    el.addEventListener("scroll", handleScroll, { passive: true });
+    return () => el.removeEventListener("scroll", handleScroll);
+  }, []); // empty deps -- attach once on mount
 
   // Notification scheduler
   useEffect(() => {
@@ -144,11 +157,17 @@ export default function App() {
     (name: PrayerName, status: PrayerStatus) => {
       markPrayer(name, status);
       if (status === "jamaat")
-        showToast("MaashaAllah, Alhamdulillah! Jamaat ke saath ada ki. 🤲");
+        showToast(
+          "MaashaAllah, Alhamdulillah! Jamaat ke saath ada ki. \uD83E\uDD32",
+        );
       else if (status === "single")
-        showToast("Taqabbal Allah. Agli baar InshaAllah Jamaat se. 🌙");
+        showToast(
+          "Taqabbal Allah. Agli baar InshaAllah Jamaat se. \uD83C\uDF19",
+        );
       else if (status === "qaza")
-        showToast("Qaza Ada Karein, InshaAllah agli baar chhutne na paaye. ⏰");
+        showToast(
+          "Qaza Ada Karein, InshaAllah agli baar chhutne na paaye. \u23F0",
+        );
     },
     [markPrayer, showToast],
   );
@@ -156,7 +175,8 @@ export default function App() {
   const handleMarkSunnah = useCallback(
     (key: string, status: SunnahStatus) => {
       markSunnah(key, status);
-      if (status === "done") showToast("Alhamdulillah! Sunnah ada ho gayi. ✨");
+      if (status === "done")
+        showToast("Alhamdulillah! Sunnah ada ho gayi. \u2728");
     },
     [markSunnah, showToast],
   );
@@ -164,7 +184,7 @@ export default function App() {
   const handleMarkTaraweeh = useCallback(
     (count: number) => {
       markTaraweeh(count);
-      showToast(`MaashaAllah! ${count} Rakat Taraweeh ada ki. 🌙`);
+      showToast(`MaashaAllah! ${count} Rakat Taraweeh ada ki. \uD83C\uDF19`);
     },
     [markTaraweeh, showToast],
   );
@@ -172,7 +192,9 @@ export default function App() {
   const handleMarkNafil = useCallback(
     (name: AdvancedPrayerName, status: "done") => {
       markAdvancedPrayer(name, status);
-      showToast(`Alhamdulillah! ${name} ada ho gayi. Allah Qabool Farmaye. 🤲`);
+      showToast(
+        `Alhamdulillah! ${name} ada ho gayi. Allah Qabool Farmaye. \uD83E\uDD32`,
+      );
     },
     [markAdvancedPrayer, showToast],
   );
@@ -187,7 +209,7 @@ export default function App() {
   const handleResolveQaza = useCallback(
     (id: string) => {
       resolveQaza(id);
-      showToast("MaashaAllah! Qaza Ada Ho Gayi. Allah Qabool Farmaye. ✓");
+      showToast("MaashaAllah! Qaza Ada Ho Gayi. Allah Qabool Farmaye. \u2713");
     },
     [resolveQaza, showToast],
   );
@@ -195,7 +217,7 @@ export default function App() {
   const handleMarkMissing = useCallback(
     (date: string, prayer: PrayerName, status: "single" | "jamaat") => {
       markMissingPrayer(date, prayer, status);
-      showToast(`Alhamdulillah! ${prayer} fix ho gayi. 🤲`);
+      showToast(`Alhamdulillah! ${prayer} fix ho gayi. \uD83E\uDD32`);
     },
     [markMissingPrayer, showToast],
   );
@@ -214,6 +236,7 @@ export default function App() {
     dua: "Dua Mode",
     tasbih: "Tasbih Mode",
     journal: "Daily Write",
+    introduction: "App Introduction",
   };
 
   const renderTab = () => {
@@ -282,16 +305,18 @@ export default function App() {
         return <TasbihPage />;
       case "journal":
         return <JournalPage />;
+      case "introduction":
+        return <IntroductionPage onBack={() => setActiveTab("home")} />;
     }
   };
 
   return (
     <>
       {!splashDone && <SplashScreen onEnter={() => setSplashDone(true)} />}
-      <div className="min-h-screen" style={{ background: "#F4F7F6" }}>
+      <div className="min-h-screen" style={{ background: "#F0EDE8" }}>
         <div
           className="mx-auto max-w-[430px] min-h-screen relative flex flex-col"
-          style={{ background: "#F4F7F6" }}
+          style={{ background: "#F0EDE8" }}
         >
           <Header
             profileName={state.profileName}
@@ -308,8 +333,8 @@ export default function App() {
               <DateClockStrip />
               <div
                 style={{
-                  background: "rgba(244,247,246,0.97)",
-                  borderBottom: "1px solid rgba(212,175,55,0.08)",
+                  background: "rgba(240,237,232,0.97)",
+                  borderBottom: "1px solid rgba(201,168,76,0.08)",
                   padding: "4px 16px",
                   textAlign: "center",
                 }}
@@ -331,6 +356,7 @@ export default function App() {
           </div>
 
           <main
+            ref={mainRef}
             className="flex-1 overflow-y-auto px-4 pb-24"
             style={{
               paddingTop: "calc(env(safe-area-inset-top, 0px) + 118px)",
@@ -338,6 +364,37 @@ export default function App() {
           >
             {renderTab()}
           </main>
+
+          {/* Scroll to top floating button */}
+          {showScrollTop && (
+            <button
+              type="button"
+              data-ocid="app.scroll-to-top.button"
+              onClick={() =>
+                mainRef.current?.scrollTo({ top: 0, behavior: "smooth" })
+              }
+              style={{
+                position: "fixed",
+                bottom: "90px",
+                right: "20px",
+                width: "44px",
+                height: "44px",
+                borderRadius: "50%",
+                background: "linear-gradient(135deg, #D4AF37, #C9A84C)",
+                border: "none",
+                boxShadow: "0 4px 16px rgba(201,168,76,0.4)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                cursor: "pointer",
+                zIndex: 90,
+                WebkitTapHighlightColor: "transparent",
+                transition: "all 0.2s",
+              }}
+            >
+              <ChevronUp size={20} color="white" />
+            </button>
+          )}
 
           <BottomNav
             activeTab={activeTab}

@@ -429,3 +429,35 @@ input[type="time"] { color-scheme: light; }
 .font-poppins {
   font-family: 'Poppins', system-ui, sans-serif;
 }
+
+/* ─── Premium Navy Theme Additions ─── */
+.nav-navy-icon {
+  color: rgba(255,255,255,0.45);
+  transition: color 0.2s ease;
+}
+.nav-navy-icon.active {
+  color: #C9A84C;
+}
+
+/* Premium glassmorphism card for blog/article reader */
+.article-glass {
+  background: rgba(255,255,255,0.97);
+  border: 1px solid rgba(201,168,76,0.15);
+  box-shadow: 0 8px 40px rgba(0,0,0,0.08);
+  border-radius: 20px;
+}
+
+/* Blog content readable typography */
+.blog-content p {
+  font-size: 15px;
+  line-height: 1.9;
+  color: #2d3748;
+  margin-bottom: 1rem;
+}
+
+/* ─── Slide-in from right (sidebar) ─── */
+@keyframes slideInRight {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+.slide-in-right { animation: slideInRight 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards; }

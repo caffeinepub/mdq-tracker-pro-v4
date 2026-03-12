@@ -1,186 +1,94 @@
-import { Bookmark, BookmarkCheck, ChevronLeft, Plus, X } from "lucide-react";
+import {
+  Bookmark,
+  BookmarkCheck,
+  ChevronLeft,
+  Globe,
+  Plus,
+  X,
+} from "lucide-react";
 import { useState } from "react";
 import type { BlogArticle } from "../../types";
+import { BLOG_ARTICLES } from "./blogArticlesData";
 
 interface BlogModeProps {
   articles: BlogArticle[];
   onUpdate: (articles: BlogArticle[]) => void;
 }
 
-const SAMPLE_ARTICLES: BlogArticle[] = [
-  {
-    id: "blog-1",
-    title: "Namaz ki Ahmiyat -- Qur'an aur Hadith ki Roshni Mein",
-    category: "Ibadat",
-    content: `Namaz Islam ke paanch arkaan mein se doosra rukn hai. Allah Ta'ala ne Quran-e-Majeed mein 700 se zyada baar namaz ka zikr farmaya hai.
+type LangMode = "romanUrdu" | "urdu" | "telugu";
 
-**Aayat-e-Qurani:**
-Allah Ta'ala farmata hai: "Aur namaz qaim karo, zakat do, aur rukoo karne waalon ke saath rukoo karo." (Baqarah: 43)
-
-"Beshak namaz mominon par muqarrara waqton par farz hai." (Nisa: 103)
-
-**Hadith Mubarak:**
-Rasulullah ne farmaya: "Islam ki bunyaad paanch cheezon par hai: Allah ki wahdaniyat ki gawahi dena, namaz qaim karna, zakat ada karna, hajj karna aur Ramzan ke roze rakhna." (Bukhari & Muslim)
-
-Aap ne yeh bhi farmaya: "Qayamat ke din bandey se sabse pehle namaz ka hisaab liya jaayega." (Abu Dawud)
-
-**Namaz ke Fawaaid:**
-1. Allah se seedha taaluq
-2. Gunaahon ki maafi
-3. Dil ka sukoon
-4. Bure kaamonn se hifazat
-5. Rizq mein barkat
-
-Allah Ta'ala ne farmaya: "Beshak namaz behayadgi aur bure kaamon se rokti hai." (Ankabut: 45)
-
-Hamein chahiye ke apni namazein waqt par aur jamaat ke saath ada karein.`,
-    isBookmarked: false,
-    readProgress: 0,
-    createdAt: "2025-01-01",
-  },
-  {
-    id: "blog-2",
-    title: "Tahajjud -- Raat ki Qimati Ibadat",
-    category: "Nafl Ibadat",
-    content: `Tahajjud namaz raat ke pichhle pehar mein padhi jaati hai. Yeh nafl namazein mein sabse afzal hai.
-
-**Qur'an mein Zikr:**
-"Aur raat ke kuch hisson mein tahajjud padho, yeh tumhare liye nafl hai. Umeed hai ke tumhara Rabb tumhe maqam-e-mahmood par pahunchaye." (Isra: 79)
-
-**Hadith:**
-Rasulullah ne farmaya: "Farz ke baad sabse afzal namaz tahajjud hai." (Muslim)
-
-Aap ne farmaya: "Allah Ta'ala raat ke aakhri teehai mein Aasmaane Duniya par nazil hota hai aur farmata hai: 'Kaun hai jo dua kare, main qabool karun. Kaun hai jo maafi maange, main maaf karun.'" (Bukhari & Muslim)
-
-**Tahajjud ka Waqt:**
-Namaaz-e-Isha ke baad se Fajr se pehle tak, lekin afzal waqt raat ka aakhri teehai hai.
-
-**Rakaat:**
-Kam se kam 2 aur zyada se zyada 8 rakaat, phir Witr.
-
-**Fawaaid:**
-- Allah ki qurbat
-- Duaon ki qabooliyat
-- Gunaahon ki maafi
-- Dil ki paakizgi
-- Bimariyon se hifazat
-
-InshaAllah, aaj raat se Tahajjud ki shuruat karein!`,
-    isBookmarked: false,
-    readProgress: 0,
-    createdAt: "2025-01-02",
-  },
-  {
-    id: "blog-3",
-    title: "Ramzan -- Rehmat, Maghfirat aur Nijaat ka Mahina",
-    category: "Ramzan",
-    content: `Ramzan al-Mubarak ka mahina Islam ka sabse azeem mahina hai. Allah Ta'ala ne is mahine mein Quran-e-Majeed nazil farmaya.
-
-**Quran mein Ramzan:**
-"Ramzan ka mahina woh hai jis mein Quran nazil kiya gaya, hidayat ke liye insaanon ki, aur dalilon ke liye hidayat aur furqaan ke." (Baqarah: 185)
-
-**Hadith:**
-Rasulullah ne farmaya: "Jab Ramzan aata hai, jannat ke darwaaze khol diye jaate hain, jahannam ke darwaaze band kar diye jaate hain aur shayaateen ko zanjeeron mein jakhad diya jaata hai." (Bukhari)
-
-Aap ne farmaya: "Jo Ramzan mein iman aur ihtisaab ke saath roza rakhe, uske pichhle saare gunaah maaf kar diye jaate hain." (Bukhari)
-
-**Ramzan ke teen Ashreh:**
-1. Pehla Ashra (1-10): Rehmat
-2. Doosra Ashra (11-20): Maghfirat
-3. Teesra Ashra (21-30): Nijaat az Naar
-
-**Shab-e-Qadr:**
-Allah Ta'ala ne farmaya: "Shab-e-Qadr hazaar mahino se behtar hai." (Qadr: 3)
-
-InshaAllah, is Ramzan mein ziyadah se zyada ibadat karein!`,
-    isBookmarked: false,
-    readProgress: 0,
-    createdAt: "2025-01-03",
-  },
-  {
-    id: "blog-4",
-    title: "Sabr ki Fazilat -- Qur'an aur Hadith Mein",
-    category: "Akhlaaq",
-    content: `Sabr Islam ki buniyadi khoobi hai. Allah Ta'ala ne Quran mein sabr ka hukm baar baar diya hai.
-
-**Quran mein Sabr:**
-"Beshak Allah sabr karne waalon ke saath hai." (Baqarah: 153)
-
-"Tum tamam logon mein se un logon ke liye behtar anjaam hai jo Taqwa ikhtiyaar karein aur sabr karein." (Yusuf: 90)
-
-"Hum tumhe thoda khauf, bhook, malon, jaanon aur phalon ki kami se zaror aazmaenge, aur (yeh khushkhabri de do) sabr karne waalon ko." (Baqarah: 155-156)
-
-**Hadith:**
-Rasulullah ne farmaya: "Mominon ka maamla ajab hai! Uski tamam haalat behtar hai. Agar use khushi milti hai toh shukar karta hai, yeh uske liye behtar hai. Agar use takleef pahunche toh sabr karta hai, yeh bhi uske liye behtar hai." (Muslim)
-
-**Sabr ke Aqsaam:**
-1. Allah ki ibadat par sabr
-2. Allah ki naraaziyon se bachne par sabr
-3. Allah ki taqdeer par sabr
-
-Hamein chahiye ke zindagi ke har marhale mein sabr ikhtiyaar karein.`,
-    isBookmarked: false,
-    readProgress: 0,
-    createdAt: "2025-01-04",
-  },
-  {
-    id: "blog-5",
-    title: "Istighfar ki Barakaat",
-    category: "Zikr",
-    content: `Istighfar Allah Ta'ala se maafi maangna hai. Yeh ek aisa amal hai jis se rizq, barkat aur dua ki qabooliyat milti hai.
-
-**Quran mein Istighfar:**
-"Apne Rabb se maafi maango, beshak woh bahut maaf karne wala hai." (Nuh: 10)
-
-"Aur jo bure kaam karein ya apne nafson par zulm karein, phir Allah ko yaad karein aur apne gunaahon ke liye maafi maangein." (Ale Imran: 135)
-
-**Hadith:**
-Rasulullah ne farmaya: "Jo roz 100 baar yeh kahe: 'Astaghfirullah wa atubu ilayh' -- Allah uske 100 gunaah maaf farmaata hai." (Bukhari)
-
-Aap ne farmaya: "Main din mein 100 baar istighfar karta hun." (Muslim)
-
-**Istighfar ke Fawaaid:**
-- Gunaahon ki maafi
-- Rizq mein zyaada
-- Duaaon ki qabooliyat
-- Gham aur museebat se nijaat
-- Baraan ki barakaat
-
-**Sayyidul Istighfar:**
-"Allahumma anta Rabbi la ilaha illa anta khalaqtani wa ana abduka..."
-
-InshaAllah, roz istighfar ko apni aadat banaayein!`,
-    isBookmarked: false,
-    readProgress: 0,
-    createdAt: "2025-01-05",
-  },
-];
-
-// Render article content paragraphs with stable keys
-function ArticleContent({ content }: { content: string }) {
+function ArticleContent({
+  content,
+  isUrdu,
+}: { content: string; isUrdu: boolean }) {
   const parts = content.split("\n");
   return (
     <>
       {parts.map((para, i) => {
-        const key = `${i}-${para.slice(0, 20)}`;
+        const key = `${i}-${para.slice(0, 15)}`;
         return para.trim() ? (
           <p
             key={key}
-            className="mb-3 leading-relaxed"
+            className="mb-4 leading-loose"
             style={{
-              color: para.startsWith("**") ? "#1a2035" : "#4a5568",
-              fontWeight: para.startsWith("**") ? "700" : "400",
-              fontSize: para.startsWith("**") ? "14px" : "13px",
-              fontFamily: "'Poppins', sans-serif",
+              color: "#2d3748",
+              fontSize: "15px",
+              fontFamily: isUrdu
+                ? "'Amiri', 'Noto Nastaliq Urdu', serif"
+                : "'Poppins', sans-serif",
+              direction: isUrdu ? "rtl" : "ltr",
+              textAlign: isUrdu ? "right" : "left",
+              lineHeight: isUrdu ? "2.2" : "1.9",
             }}
           >
-            {para.replace(/\*\*/g, "")}
+            {para}
           </p>
         ) : (
-          <div key={key} className="mb-2" />
+          <div key={key} className="mb-3" />
         );
       })}
     </>
+  );
+}
+
+function LangToggle({
+  lang,
+  onChange,
+}: { lang: LangMode; onChange: (l: LangMode) => void }) {
+  const options: { key: LangMode; label: string }[] = [
+    { key: "romanUrdu", label: "Roman Urdu" },
+    { key: "urdu", label: "اردو" },
+    { key: "telugu", label: "తెలుగు" },
+  ];
+  return (
+    <div
+      className="flex gap-1 p-1 rounded-xl mb-4"
+      style={{
+        background: "rgba(10,15,44,0.06)",
+        border: "1px solid rgba(212,175,55,0.15)",
+      }}
+    >
+      {options.map((opt) => (
+        <button
+          key={opt.key}
+          type="button"
+          data-ocid={`blog.lang.${opt.key}.toggle`}
+          onClick={() => onChange(opt.key)}
+          className="flex-1 py-1.5 rounded-lg text-[11px] font-semibold transition-all active:scale-95"
+          style={{
+            background:
+              lang === opt.key
+                ? "linear-gradient(135deg,#C9A84C,#b8941e)"
+                : "transparent",
+            color: lang === opt.key ? "#fff" : "#8a7040",
+            fontFamily: "'Poppins', sans-serif",
+            WebkitTapHighlightColor: "transparent",
+          }}
+        >
+          {opt.label}
+        </button>
+      ))}
+    </div>
   );
 }
 
@@ -191,12 +99,25 @@ export function BlogMode({ articles, onUpdate }: BlogModeProps) {
   const [newCategory, setNewCategory] = useState("");
   const [newContent, setNewContent] = useState("");
   const [activeFilter, setActiveFilter] = useState("All");
+  const [lang, setLang] = useState<LangMode>("romanUrdu");
 
-  // Merge sample articles with user articles
+  // Merge built-in + user articles
   const allArticles = [
-    ...SAMPLE_ARTICLES.map((a) => {
+    ...BLOG_ARTICLES.map((a) => {
       const userVersion = articles.find((ua) => ua.id === a.id);
-      return userVersion ? { ...a, ...userVersion } : a;
+      const content = a.romanUrdu; // default
+      return userVersion
+        ? { ...userVersion, _multiLang: a }
+        : {
+            id: a.id,
+            title: a.title,
+            category: a.category,
+            content,
+            isBookmarked: false,
+            readProgress: 0,
+            createdAt: a.createdAt,
+            _multiLang: a,
+          };
     }),
     ...articles.filter((a) => a.isUserAdded),
   ];
@@ -211,8 +132,15 @@ export function BlogMode({ articles, onUpdate }: BlogModeProps) {
       : allArticles.filter((a) => a.category === activeFilter);
 
   const selected = selectedId
-    ? allArticles.find((a) => a.id === selectedId)
+    ? (allArticles.find((a) => a.id === selectedId) as any)
     : null;
+
+  const getContent = (article: any): string => {
+    if (article._multiLang) {
+      return article._multiLang[lang] ?? article._multiLang.romanUrdu;
+    }
+    return article.content;
+  };
 
   const toggleBookmark = (id: string) => {
     const existing = articles.find((a) => a.id === id);
@@ -223,8 +151,8 @@ export function BlogMode({ articles, onUpdate }: BlogModeProps) {
         ),
       );
     } else {
-      const sample = SAMPLE_ARTICLES.find((a) => a.id === id);
-      if (sample) onUpdate([...articles, { ...sample, isBookmarked: true }]);
+      const found = allArticles.find((a) => a.id === id);
+      if (found) onUpdate([...articles, { ...found, isBookmarked: true }]);
     }
   };
 
@@ -247,8 +175,10 @@ export function BlogMode({ articles, onUpdate }: BlogModeProps) {
     setShowAddForm(false);
   };
 
-  // Article reader view
+  // ── Article Reader ──────────────────────────────────────────────────────────
   if (selected) {
+    const isUrduScript = lang === "urdu" || lang === "telugu";
+    const displayContent = getContent(selected);
     return (
       <div className="fade-in" data-ocid="blog.article.panel">
         <button
@@ -257,46 +187,49 @@ export function BlogMode({ articles, onUpdate }: BlogModeProps) {
           onClick={() => setSelectedId(null)}
           className="flex items-center gap-2 mb-4 transition-all active:scale-95"
           style={{
-            color: "#b8941e",
+            color: "#C9A84C",
             fontFamily: "'Poppins', sans-serif",
             WebkitTapHighlightColor: "transparent",
           }}
         >
           <ChevronLeft size={16} />
-          <span className="text-sm font-medium">Back to Blog</span>
+          <span className="text-sm font-medium">Wapas Blog</span>
         </button>
+
+        {/* Language toggle */}
+        {selected._multiLang && <LangToggle lang={lang} onChange={setLang} />}
 
         <div
           className="rounded-2xl overflow-hidden"
           style={{
             background: "#ffffff",
-            border: "1px solid rgba(212,175,55,0.12)",
-            boxShadow: "0 4px 20px rgba(0,0,0,0.07)",
+            border: "1px solid rgba(201,168,76,0.15)",
+            boxShadow: "0 6px 30px rgba(0,0,0,0.08)",
           }}
         >
           {/* Article Header */}
           <div
             style={{
-              background: "linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)",
+              background: "linear-gradient(135deg,#0A0F2C 0%,#1a2550 100%)",
               padding: "20px",
             }}
           >
             <span
               className="text-[10px] px-2 py-0.5 rounded-full mb-3 inline-block"
               style={{
-                background: "rgba(212,175,55,0.2)",
-                color: "#D4AF37",
+                background: "rgba(201,168,76,0.2)",
+                color: "#C9A84C",
                 fontFamily: "'Poppins', sans-serif",
               }}
             >
               {selected.category}
             </span>
             <h2
-              className="font-bold text-base leading-tight"
+              className="font-bold text-base leading-snug mb-3"
               style={{
                 color: "#ffffff",
-                fontFamily: "'Amiri', 'Georgia', serif",
-                marginBottom: "12px",
+                fontFamily: "'Amiri','Georgia',serif",
+                fontSize: "18px",
               }}
             >
               {selected.title}
@@ -306,7 +239,7 @@ export function BlogMode({ articles, onUpdate }: BlogModeProps) {
                 className="text-[10px]"
                 style={{
                   color: "rgba(255,255,255,0.4)",
-                  fontFamily: "'Poppins', sans-serif",
+                  fontFamily: "'Poppins',sans-serif",
                 }}
               >
                 {selected.createdAt}
@@ -317,8 +250,8 @@ export function BlogMode({ articles, onUpdate }: BlogModeProps) {
                 onClick={() => toggleBookmark(selected.id)}
                 className="flex items-center gap-1.5 text-[11px] px-2 py-1 rounded-lg transition-all active:scale-95"
                 style={{
-                  background: "rgba(212,175,55,0.12)",
-                  color: "#D4AF37",
+                  background: "rgba(201,168,76,0.12)",
+                  color: "#C9A84C",
                   WebkitTapHighlightColor: "transparent",
                 }}
               >
@@ -332,25 +265,25 @@ export function BlogMode({ articles, onUpdate }: BlogModeProps) {
             </div>
           </div>
 
-          {/* Article Content */}
-          <div className="p-5">
-            <ArticleContent content={selected.content} />
+          {/* Content */}
+          <div className="p-5" style={{ background: "#fafaf8" }}>
+            <ArticleContent content={displayContent} isUrdu={isUrduScript} />
           </div>
         </div>
       </div>
     );
   }
 
-  // Add article form
+  // ── Add Form ────────────────────────────────────────────────────────────────
   if (showAddForm) {
     return (
       <div className="fade-in" data-ocid="blog.add.panel">
         <div className="flex items-center justify-between mb-4">
           <h2
             className="text-sm font-semibold"
-            style={{ color: "#1a2035", fontFamily: "'Poppins', sans-serif" }}
+            style={{ color: "#0A0F2C", fontFamily: "'Poppins',sans-serif" }}
           >
-            Naya Article Likhein
+            Naya Article
           </h2>
           <button
             type="button"
@@ -365,69 +298,63 @@ export function BlogMode({ articles, onUpdate }: BlogModeProps) {
             <X size={14} style={{ color: "#4a5568" }} />
           </button>
         </div>
-
         <div
           className="space-y-3"
           style={{
             background: "#ffffff",
             borderRadius: "16px",
             padding: "16px",
-            border: "1px solid rgba(212,175,55,0.12)",
+            border: "1px solid rgba(201,168,76,0.15)",
           }}
         >
-          <div>
-            <label
-              htmlFor="blog-title"
-              className="block text-xs font-semibold mb-1"
-              style={{ color: "#4a5568", fontFamily: "'Poppins', sans-serif" }}
-            >
-              Title *
-            </label>
-            <input
-              id="blog-title"
-              data-ocid="blog.title.input"
-              type="text"
-              value={newTitle}
-              onChange={(e) => setNewTitle(e.target.value)}
-              placeholder="Article ka naam likhen..."
-              className="w-full px-3 py-2 rounded-xl text-sm outline-none"
-              style={{
-                background: "rgba(212,175,55,0.04)",
-                border: "1px solid rgba(212,175,55,0.2)",
-                color: "#1a2035",
-                fontFamily: "'Poppins', sans-serif",
-              }}
-            />
-          </div>
-          <div>
-            <label
-              htmlFor="blog-category"
-              className="block text-xs font-semibold mb-1"
-              style={{ color: "#4a5568", fontFamily: "'Poppins', sans-serif" }}
-            >
-              Category
-            </label>
-            <input
-              id="blog-category"
-              data-ocid="blog.category.input"
-              type="text"
-              value={newCategory}
-              onChange={(e) => setNewCategory(e.target.value)}
-              placeholder="e.g. Ibadat, Zikr, Akhlaaq..."
-              className="w-full px-3 py-2 rounded-xl text-sm outline-none"
-              style={{
-                background: "rgba(212,175,55,0.04)",
-                border: "1px solid rgba(212,175,55,0.2)",
-                color: "#1a2035",
-                fontFamily: "'Poppins', sans-serif",
-              }}
-            />
-          </div>
+          {[
+            {
+              id: "blog-title",
+              label: "Title *",
+              val: newTitle,
+              set: setNewTitle,
+              placeholder: "Article ka naam...",
+              multi: false,
+            },
+            {
+              id: "blog-category",
+              label: "Category",
+              val: newCategory,
+              set: setNewCategory,
+              placeholder: "e.g. Ibadat, Zikr...",
+              multi: false,
+            },
+          ].map((f) => (
+            <div key={f.id}>
+              <label
+                htmlFor={f.id}
+                className="block text-xs font-semibold mb-1"
+                style={{ color: "#4a5568", fontFamily: "'Poppins',sans-serif" }}
+              >
+                {f.label}
+              </label>
+              <input
+                id={f.id}
+                data-ocid={`blog.${f.id}.input`}
+                type="text"
+                value={f.val}
+                onChange={(e) => f.set(e.target.value)}
+                placeholder={f.placeholder}
+                className="w-full px-3 py-2 rounded-xl text-sm outline-none"
+                style={{
+                  background: "rgba(201,168,76,0.04)",
+                  border: "1px solid rgba(201,168,76,0.2)",
+                  color: "#0A0F2C",
+                  fontFamily: "'Poppins',sans-serif",
+                }}
+              />
+            </div>
+          ))}
           <div>
             <label
               htmlFor="blog-content"
               className="block text-xs font-semibold mb-1"
-              style={{ color: "#4a5568", fontFamily: "'Poppins', sans-serif" }}
+              style={{ color: "#4a5568", fontFamily: "'Poppins',sans-serif" }}
             >
               Content *
             </label>
@@ -436,14 +363,14 @@ export function BlogMode({ articles, onUpdate }: BlogModeProps) {
               data-ocid="blog.content.textarea"
               value={newContent}
               onChange={(e) => setNewContent(e.target.value)}
-              placeholder="Article ka content likhen..."
+              placeholder="Article content..."
               rows={8}
               className="w-full px-3 py-2 rounded-xl text-sm outline-none resize-none"
               style={{
-                background: "rgba(212,175,55,0.04)",
-                border: "1px solid rgba(212,175,55,0.2)",
-                color: "#1a2035",
-                fontFamily: "'Poppins', sans-serif",
+                background: "rgba(201,168,76,0.04)",
+                border: "1px solid rgba(201,168,76,0.2)",
+                color: "#0A0F2C",
+                fontFamily: "'Poppins',sans-serif",
               }}
             />
           </div>
@@ -451,9 +378,10 @@ export function BlogMode({ articles, onUpdate }: BlogModeProps) {
             type="button"
             data-ocid="blog.add.submit_button"
             onClick={addArticle}
-            className="w-full btn-gold py-3 rounded-xl font-semibold text-sm"
+            className="w-full py-3 rounded-xl font-semibold text-sm text-white"
             style={{
-              fontFamily: "'Poppins', sans-serif",
+              background: "linear-gradient(135deg,#C9A84C,#b8941e)",
+              fontFamily: "'Poppins',sans-serif",
               WebkitTapHighlightColor: "transparent",
             }}
           >
@@ -464,18 +392,28 @@ export function BlogMode({ articles, onUpdate }: BlogModeProps) {
     );
   }
 
-  // Article list view
+  // ── Article List ────────────────────────────────────────────────────────────
   return (
     <div className="space-y-4" data-ocid="blog.list.panel">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <span style={{ fontSize: "1rem" }}>📖</span>
+          <Globe size={16} style={{ color: "#C9A84C" }} />
           <h2
             className="text-sm font-semibold"
-            style={{ color: "#1a2035", fontFamily: "'Poppins', sans-serif" }}
+            style={{ color: "#0A0F2C", fontFamily: "'Poppins',sans-serif" }}
           >
             Islamic Blog
           </h2>
+          <span
+            className="text-[10px] px-1.5 py-0.5 rounded-full"
+            style={{
+              background: "rgba(201,168,76,0.12)",
+              color: "#C9A84C",
+              fontFamily: "'Poppins',sans-serif",
+            }}
+          >
+            {filtered.length}
+          </span>
         </div>
         <button
           type="button"
@@ -483,17 +421,19 @@ export function BlogMode({ articles, onUpdate }: BlogModeProps) {
           onClick={() => setShowAddForm(true)}
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all active:scale-95"
           style={{
-            background: "rgba(212,175,55,0.1)",
-            border: "1px solid rgba(212,175,55,0.25)",
+            background: "rgba(201,168,76,0.1)",
+            border: "1px solid rgba(201,168,76,0.25)",
             color: "#b8941e",
-            fontFamily: "'Poppins', sans-serif",
+            fontFamily: "'Poppins',sans-serif",
             WebkitTapHighlightColor: "transparent",
           }}
         >
-          <Plus size={13} />
-          Add Article
+          <Plus size={13} /> Add
         </button>
       </div>
+
+      {/* Language toggle for list view */}
+      <LangToggle lang={lang} onChange={setLang} />
 
       {/* Category filter */}
       <div
@@ -510,13 +450,11 @@ export function BlogMode({ articles, onUpdate }: BlogModeProps) {
             style={{
               background:
                 activeFilter === cat
-                  ? "linear-gradient(135deg, #D4AF37, #c49a1a)"
-                  : "rgba(212,175,55,0.07)",
+                  ? "linear-gradient(135deg,#C9A84C,#b8941e)"
+                  : "rgba(201,168,76,0.07)",
               color: activeFilter === cat ? "#fff" : "#b8941e",
-              border: `1px solid ${
-                activeFilter === cat ? "transparent" : "rgba(212,175,55,0.15)"
-              }`,
-              fontFamily: "'Poppins', sans-serif",
+              border: `1px solid ${activeFilter === cat ? "transparent" : "rgba(201,168,76,0.15)"}`,
+              fontFamily: "'Poppins',sans-serif",
               WebkitTapHighlightColor: "transparent",
             }}
           >
@@ -527,87 +465,74 @@ export function BlogMode({ articles, onUpdate }: BlogModeProps) {
 
       {/* Article cards */}
       <div className="space-y-3">
-        {filtered.map((article, idx) => {
-          const isBookmarked = article.isBookmarked;
-          return (
-            <div
-              key={article.id}
-              data-ocid={`blog.item.${idx + 1}`}
-              className="rounded-2xl overflow-hidden card-enter"
-              style={{
-                background: "#ffffff",
-                border: "1px solid rgba(212,175,55,0.1)",
-                boxShadow: "0 2px 10px rgba(0,0,0,0.05)",
-                animationDelay: `${idx * 0.05}s`,
-              }}
+        {filtered.map((article, idx) => (
+          <div
+            key={article.id}
+            data-ocid={`blog.item.${idx + 1}`}
+            className="rounded-2xl overflow-hidden"
+            style={{
+              background: "#ffffff",
+              border: "1px solid rgba(201,168,76,0.12)",
+              boxShadow: "0 2px 12px rgba(0,0,0,0.05)",
+            }}
+          >
+            <button
+              type="button"
+              data-ocid={`blog.read.button.${idx + 1}`}
+              onClick={() => setSelectedId(article.id)}
+              className="w-full text-left p-4 transition-all active:scale-[0.99]"
+              style={{ WebkitTapHighlightColor: "transparent" }}
             >
-              <button
-                type="button"
-                data-ocid={`blog.read.button.${idx + 1}`}
-                onClick={() => setSelectedId(article.id)}
-                className="w-full text-left p-4 transition-all active:scale-[0.99]"
-                style={{ WebkitTapHighlightColor: "transparent" }}
-              >
-                <div className="flex items-start justify-between gap-2 mb-2">
-                  <span
-                    className="text-[9px] px-2 py-0.5 rounded-full"
-                    style={{
-                      background: "rgba(212,175,55,0.08)",
-                      color: "#b8941e",
-                      fontFamily: "'Poppins', sans-serif",
-                    }}
-                  >
-                    {article.category}
-                  </span>
-                  <div className="flex items-center gap-1.5">
-                    {isBookmarked && (
-                      <BookmarkCheck
-                        size={13}
-                        style={{ color: "#b8941e", flexShrink: 0 }}
-                      />
-                    )}
-                    {article.isUserAdded && (
-                      <span
-                        className="text-[9px]"
-                        style={{
-                          color: "#2563eb",
-                          fontFamily: "'Poppins', sans-serif",
-                        }}
-                      >
-                        Mera
-                      </span>
-                    )}
-                  </div>
+              <div className="flex items-start justify-between gap-2 mb-2">
+                <span
+                  className="text-[9px] px-2 py-0.5 rounded-full"
+                  style={{
+                    background: "rgba(10,15,44,0.06)",
+                    color: "#0A0F2C",
+                    fontFamily: "'Poppins',sans-serif",
+                  }}
+                >
+                  {article.category}
+                </span>
+                <div className="flex items-center gap-1.5">
+                  {article.isBookmarked && (
+                    <BookmarkCheck
+                      size={13}
+                      style={{ color: "#C9A84C", flexShrink: 0 }}
+                    />
+                  )}
+                  {article.isUserAdded && (
+                    <span className="text-[9px]" style={{ color: "#2563eb" }}>
+                      Mera
+                    </span>
+                  )}
                 </div>
-                <h3
-                  className="font-semibold text-sm leading-tight mb-2"
-                  style={{
-                    color: "#1a2035",
-                    fontFamily: "'Amiri', 'Georgia', serif",
-                  }}
-                >
-                  {article.title}
-                </h3>
-                <p
-                  className="text-xs line-clamp-2 leading-relaxed"
-                  style={{
-                    color: "#8a9bb0",
-                    fontFamily: "'Poppins', sans-serif",
-                  }}
-                >
-                  {article.content.slice(0, 100)}...
-                </p>
-              </button>
-            </div>
-          );
-        })}
+              </div>
+              <h3
+                className="font-semibold leading-snug mb-2"
+                style={{
+                  color: "#0A0F2C",
+                  fontFamily: "'Amiri','Georgia',serif",
+                  fontSize: "15px",
+                }}
+              >
+                {article.title}
+              </h3>
+              <p
+                className="text-xs line-clamp-2 leading-relaxed"
+                style={{ color: "#6b7a99", fontFamily: "'Poppins',sans-serif" }}
+              >
+                {article.content.slice(0, 90)}...
+              </p>
+            </button>
+          </div>
+        ))}
       </div>
 
-      {/* Footer */}
       <div className="text-center py-4">
         <p
           className="text-xs italic"
-          style={{ color: "#8a9bb0", fontFamily: "'Poppins', sans-serif" }}
+          style={{ color: "#8a9bb0", fontFamily: "'Poppins',sans-serif" }}
         >
           &quot;Iqra bismi rabbika alladhi khalaq&quot; (Alaq: 1)
         </p>

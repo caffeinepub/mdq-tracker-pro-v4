@@ -115,13 +115,13 @@ export function BottomNav({
               transition={{ duration: 0.2 }}
               className="fixed inset-0 z-40"
               style={{
-                background: "rgba(0,0,0,0.25)",
+                background: "rgba(0,0,0,0.35)",
                 backdropFilter: "blur(3px)",
               }}
               onClick={() => setMoreOpen(false)}
             />
 
-            {/* Slide-up Sheet */}
+            {/* Slide-up Sheet -- stays white/light for readability */}
             <motion.div
               key="more-sheet"
               data-ocid="nav.more.sheet"
@@ -134,9 +134,9 @@ export function BottomNav({
                 background: "rgba(255,255,255,0.97)",
                 backdropFilter: "blur(32px) saturate(2)",
                 WebkitBackdropFilter: "blur(32px) saturate(2)",
-                borderTop: "1px solid rgba(212,175,55,0.2)",
+                borderTop: "1px solid rgba(201,168,76,0.2)",
                 borderRadius: "24px 24px 0 0",
-                boxShadow: "0 -8px 40px rgba(0,0,0,0.12)",
+                boxShadow: "0 -8px 40px rgba(0,0,0,0.15)",
                 paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 80px)",
               }}
             >
@@ -145,7 +145,7 @@ export function BottomNav({
                 <div className="flex flex-col">
                   <div
                     className="w-10 h-1 rounded-full mx-auto mb-3"
-                    style={{ background: "rgba(212,175,55,0.35)" }}
+                    style={{ background: "rgba(201,168,76,0.35)" }}
                   />
                   <p
                     style={{
@@ -178,7 +178,7 @@ export function BottomNav({
               <div
                 style={{
                   height: "1px",
-                  background: "rgba(212,175,55,0.1)",
+                  background: "rgba(201,168,76,0.1)",
                   marginBottom: "8px",
                 }}
               />
@@ -206,10 +206,10 @@ export function BottomNav({
                       className="flex items-center gap-4 w-full text-left rounded-2xl px-4 py-3.5"
                       style={{
                         background: isActive
-                          ? "linear-gradient(135deg, rgba(212,175,55,0.08), rgba(212,175,55,0.04))"
+                          ? "linear-gradient(135deg, rgba(201,168,76,0.08), rgba(201,168,76,0.04))"
                           : "rgba(0,0,0,0.02)",
                         border: isActive
-                          ? "1px solid rgba(212,175,55,0.2)"
+                          ? "1px solid rgba(201,168,76,0.2)"
                           : "1px solid transparent",
                         transition: "background 0.2s",
                         WebkitTapHighlightColor: "transparent",
@@ -220,16 +220,16 @@ export function BottomNav({
                         className="flex items-center justify-center w-11 h-11 rounded-2xl flex-shrink-0"
                         style={{
                           background: isActive
-                            ? "rgba(212,175,55,0.12)"
+                            ? "rgba(201,168,76,0.12)"
                             : `${tab.color}18`,
                           boxShadow: isActive
-                            ? "0 0 12px rgba(212,175,55,0.2)"
+                            ? "0 0 12px rgba(201,168,76,0.2)"
                             : "none",
                         }}
                       >
                         <Icon
                           size={20}
-                          style={{ color: isActive ? "#b8941e" : tab.color }}
+                          style={{ color: isActive ? "#C9A84C" : tab.color }}
                         />
                       </span>
 
@@ -239,7 +239,7 @@ export function BottomNav({
                           style={{
                             fontSize: "14px",
                             fontWeight: "600",
-                            color: isActive ? "#b8941e" : "#1a2035",
+                            color: isActive ? "#C9A84C" : "#1a2035",
                             fontFamily: "'Poppins', sans-serif",
                             lineHeight: 1.3,
                           }}
@@ -264,8 +264,8 @@ export function BottomNav({
                         <span
                           className="w-2 h-2 rounded-full flex-shrink-0"
                           style={{
-                            background: "#b8941e",
-                            boxShadow: "0 0 6px rgba(212,175,55,0.5)",
+                            background: "#C9A84C",
+                            boxShadow: "0 0 6px rgba(201,168,76,0.5)",
                           }}
                         />
                       )}
@@ -278,15 +278,15 @@ export function BottomNav({
         )}
       </AnimatePresence>
 
-      {/* Bottom Nav Bar */}
+      {/* Bottom Nav Bar -- Deep Navy */}
       <nav
         className="fixed bottom-0 left-0 right-0 z-50"
         style={{
-          background: "rgba(255,255,255,0.97)",
+          background: "rgba(8,12,35,0.97)",
           backdropFilter: "blur(24px) saturate(1.8)",
           WebkitBackdropFilter: "blur(24px) saturate(1.8)",
-          borderTop: "1px solid rgba(212,175,55,0.15)",
-          boxShadow: "0 -2px 20px rgba(0,0,0,0.07)",
+          borderTop: "1px solid rgba(201,168,76,0.2)",
+          boxShadow: "0 -2px 20px rgba(0,0,0,0.35)",
           paddingBottom: "env(safe-area-inset-bottom, 0px)",
         }}
       >
@@ -317,8 +317,8 @@ export function BottomNav({
                     className="absolute inset-x-1 top-0 h-[2.5px] rounded-full"
                     style={{
                       background:
-                        "linear-gradient(90deg, #b8941e, #D4AF37, #b8941e)",
-                      boxShadow: "0 0 8px rgba(212,175,55,0.7)",
+                        "linear-gradient(90deg, #b8941e, #C9A84C, #b8941e)",
+                      boxShadow: "0 0 8px rgba(201,168,76,0.8)",
                     }}
                     transition={{ type: "spring", stiffness: 380, damping: 30 }}
                   />
@@ -329,10 +329,10 @@ export function BottomNav({
                   className="relative flex items-center justify-center w-8 h-8 rounded-xl"
                   animate={{
                     background: isActive
-                      ? "rgba(212,175,55,0.1)"
+                      ? "rgba(201,168,76,0.15)"
                       : "transparent",
                     boxShadow: isActive
-                      ? "0 0 12px rgba(212,175,55,0.18)"
+                      ? "0 0 14px rgba(201,168,76,0.25)"
                       : "none",
                   }}
                   transition={{ duration: 0.25 }}
@@ -340,7 +340,7 @@ export function BottomNav({
                   <Icon
                     size={17}
                     style={{
-                      color: isActive ? "#b8941e" : "#8a9bb0",
+                      color: isActive ? "#C9A84C" : "rgba(255,255,255,0.45)",
                       transition: "color 0.2s ease",
                     }}
                   />
@@ -367,7 +367,7 @@ export function BottomNav({
                   style={{
                     fontSize: "9px",
                     fontWeight: "600",
-                    color: isActive ? "#b8941e" : "#8a9bb0",
+                    color: isActive ? "#C9A84C" : "rgba(255,255,255,0.45)",
                     letterSpacing: "0.04em",
                     fontFamily: "'Poppins', sans-serif",
                     transition: "color 0.2s ease",
@@ -397,8 +397,8 @@ export function BottomNav({
                 className="absolute inset-x-1 top-0 h-[2.5px] rounded-full"
                 style={{
                   background:
-                    "linear-gradient(90deg, #b8941e, #D4AF37, #b8941e)",
-                  boxShadow: "0 0 8px rgba(212,175,55,0.7)",
+                    "linear-gradient(90deg, #b8941e, #C9A84C, #b8941e)",
+                  boxShadow: "0 0 8px rgba(201,168,76,0.8)",
                 }}
                 transition={{ type: "spring", stiffness: 380, damping: 30 }}
               />
@@ -409,11 +409,11 @@ export function BottomNav({
               animate={{
                 background:
                   moreOpen || isMoreActive
-                    ? "rgba(212,175,55,0.1)"
+                    ? "rgba(201,168,76,0.15)"
                     : "transparent",
                 boxShadow:
                   moreOpen || isMoreActive
-                    ? "0 0 12px rgba(212,175,55,0.18)"
+                    ? "0 0 14px rgba(201,168,76,0.25)"
                     : "none",
                 rotate: moreOpen ? 90 : 0,
               }}
@@ -422,7 +422,10 @@ export function BottomNav({
               <Grid3X3
                 size={17}
                 style={{
-                  color: moreOpen || isMoreActive ? "#b8941e" : "#8a9bb0",
+                  color:
+                    moreOpen || isMoreActive
+                      ? "#C9A84C"
+                      : "rgba(255,255,255,0.45)",
                   transition: "color 0.2s ease",
                 }}
               />
@@ -432,7 +435,10 @@ export function BottomNav({
               style={{
                 fontSize: "9px",
                 fontWeight: "600",
-                color: moreOpen || isMoreActive ? "#b8941e" : "#8a9bb0",
+                color:
+                  moreOpen || isMoreActive
+                    ? "#C9A84C"
+                    : "rgba(255,255,255,0.45)",
                 letterSpacing: "0.04em",
                 fontFamily: "'Poppins', sans-serif",
                 transition: "color 0.2s ease",

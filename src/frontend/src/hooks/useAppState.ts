@@ -326,10 +326,49 @@ export function useAppState() {
     (name: PrayerName, status: PrayerStatus) => {
       setState((prev) => {
         if (!prev.dailyLog) return prev;
+        const today = getToday();
         const newLog = {
           ...prev.dailyLog,
           prayers: { ...prev.dailyLog.prayers, [name]: status },
         };
+
+        // If marking as qaza, add to vault (avoid duplicate for same prayer+date)
+        if (status === "qaza") {
+          const alreadyInVault = prev.qazaVault.some(
+            (e) =>
+              e.prayerName === name &&
+              e.missedDate === today &&
+              e.status === "pending",
+          );
+          if (!alreadyInVault) {
+            const newEntry: QazaEntry = {
+              id: Math.random().toString(36).slice(2),
+              prayerName: name,
+              missedDate: today,
+              missedTime: "",
+              status: "pending",
+            };
+            return {
+              ...prev,
+              dailyLog: newLog,
+              qazaVault: [...prev.qazaVault, newEntry],
+            };
+          }
+        }
+
+        // If changing FROM qaza, remove today's pending vault entry for this prayer
+        if (status !== "qaza" && prev.dailyLog.prayers[name] === "qaza") {
+          const newVault = prev.qazaVault.filter(
+            (e) =>
+              !(
+                e.prayerName === name &&
+                e.missedDate === today &&
+                e.status === "pending"
+              ),
+          );
+          return { ...prev, dailyLog: newLog, qazaVault: newVault };
+        }
+
         return { ...prev, dailyLog: newLog };
       });
     },

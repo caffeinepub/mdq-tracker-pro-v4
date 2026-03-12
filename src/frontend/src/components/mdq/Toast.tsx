@@ -1,4 +1,3 @@
-import { X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 
@@ -9,82 +8,102 @@ interface ToastProps {
 }
 
 export function Toast({ message, visible, onDismiss }: ToastProps) {
-  const [animating, setAnimating] = useState(false);
   const [showing, setShowing] = useState(false);
+  const [animOut, setAnimOut] = useState(false);
 
   useEffect(() => {
     if (visible && message) {
+      setAnimOut(false);
       setShowing(true);
-      setAnimating(false);
-    }
-  }, [visible, message]);
-
-  useEffect(() => {
-    if (!visible && showing) {
-      setAnimating(true);
+      // Auto-dismiss after 3 seconds
       const t = setTimeout(() => {
-        setShowing(false);
-        setAnimating(false);
-      }, 280);
+        setAnimOut(true);
+        const t2 = setTimeout(() => {
+          setShowing(false);
+          setAnimOut(false);
+          onDismiss();
+        }, 350);
+        return () => clearTimeout(t2);
+      }, 3000);
       return () => clearTimeout(t);
     }
-  }, [visible, showing]);
+  }, [visible, message, onDismiss]);
 
   if (!showing) return null;
 
   return createPortal(
     <div
-      data-ocid="toast"
-      className={`fixed z-[200] pointer-events-auto ${
-        animating ? "slide-up" : "slide-down"
-      }`}
+      data-ocid="notification.toast"
       style={{
-        top: "calc(env(safe-area-inset-top, 0px) + 16px)",
+        position: "fixed",
+        top: "12px",
         left: "50%",
         transform: "translateX(-50%)",
-        width: "min(90vw, 380px)",
+        zIndex: 99999,
+        pointerEvents: "none",
+        display: "flex",
+        justifyContent: "center",
+        width: "auto",
+        maxWidth: "90vw",
       }}
     >
+      <style>{`
+        @keyframes pillIn {
+          0%  { transform: translateY(-80px) scale(0.85); opacity: 0; }
+          60% { transform: translateY(4px)   scale(1.03); opacity: 1; }
+          100%{ transform: translateY(0)     scale(1);    opacity: 1; }
+        }
+        @keyframes pillOut {
+          0%  { transform: translateY(0)     scale(1);    opacity: 1; }
+          100%{ transform: translateY(-80px) scale(0.85); opacity: 0; }
+        }
+      `}</style>
       <div
-        className="rounded-2xl px-5 py-4 flex items-start gap-3 toast-premium"
         style={{
-          background: "rgba(255,255,255,0.97)",
-          border: "1px solid rgba(212,175,55,0.3)",
-          boxShadow:
-            "0 8px 32px rgba(0,0,0,0.12), 0 0 20px rgba(212,175,55,0.08)",
+          background: "rgba(10,15,44,0.92)",
+          borderRadius: "50px",
+          padding: "10px 20px",
+          display: "flex",
+          alignItems: "center",
+          gap: "8px",
           backdropFilter: "blur(20px)",
           WebkitBackdropFilter: "blur(20px)",
+          border: "1px solid rgba(201,168,76,0.35)",
+          boxShadow:
+            "0 8px 32px rgba(0,0,0,0.45), 0 0 0 1px rgba(201,168,76,0.08)",
+          maxWidth: "320px",
+          minWidth: "200px",
+          width: "auto",
+          animation: animOut
+            ? "pillOut 0.35s cubic-bezier(0.4,0,0.6,1) forwards"
+            : "pillIn 0.45s cubic-bezier(0.34,1.56,0.64,1) forwards",
         }}
       >
-        <div className="flex-shrink-0 mt-0.5">
-          <div
-            className="w-6 h-6 rounded-full flex items-center justify-center"
-            style={{
-              background: "rgba(212,175,55,0.12)",
-              border: "1px solid rgba(212,175,55,0.3)",
-            }}
-          >
-            <span className="text-[10px]" style={{ color: "#b8941e" }}>
-              ✦
-            </span>
-          </div>
-        </div>
-        <div className="flex-1">
-          <p
-            className="text-sm font-medium leading-relaxed"
-            style={{ color: "#1a2035", fontFamily: "'Poppins', sans-serif" }}
-          >
-            {message}
-          </p>
-        </div>
-        <button
-          type="button"
-          onClick={onDismiss}
-          className="flex-shrink-0 transition-colors mt-0.5"
-          style={{ color: "#8a9bb0", WebkitTapHighlightColor: "transparent" }}
+        <span style={{ fontSize: "14px", flexShrink: 0 }}>🕌</span>
+        <span
+          style={{
+            color: "rgba(255,255,255,0.92)",
+            fontSize: "13px",
+            fontFamily: "'Poppins', sans-serif",
+            fontWeight: 500,
+            whiteSpace: "nowrap",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            maxWidth: "240px",
+          }}
         >
-          <X size={15} />
-        </button>
+          {message}
+        </span>
+        <span
+          style={{
+            width: "6px",
+            height: "6px",
+            borderRadius: "50%",
+            background: "rgba(201,168,76,0.7)",
+            flexShrink: 0,
+            marginLeft: "2px",
+          }}
+        />
       </div>
     </div>,
     document.body,

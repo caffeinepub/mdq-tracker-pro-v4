@@ -35,6 +35,13 @@ const ACTIONS: {
     gradient: "linear-gradient(135deg,#14b8a6,#0d9488)",
     shadow: "rgba(20,184,166,0.35)",
   },
+  {
+    id: "introduction",
+    emoji: "📜",
+    label: "App Info",
+    gradient: "linear-gradient(135deg,#C9A84C,#b8941e)",
+    shadow: "rgba(201,168,76,0.35)",
+  },
 ];
 
 interface ActionButtonsProps {

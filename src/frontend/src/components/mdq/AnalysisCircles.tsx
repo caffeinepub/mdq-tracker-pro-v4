@@ -9,6 +9,13 @@ const NAFIL_NAMES: AdvancedPrayerName[] = [
   "Awwabin",
 ];
 
+const NAFIL_COLORS: Record<AdvancedPrayerName, string> = {
+  Tahajjud: "#7c3aed",
+  Ishraq: "#f97316",
+  Chasht: "#10b981",
+  Awwabin: "#0891b2",
+};
+
 function Ring({
   size = 80,
   strokeWidth = 7,
@@ -135,7 +142,14 @@ export function AnalysisCircles({ state }: AnalysisCirclesProps) {
       monthTotal++;
     }
   }
-  const daysInMonth = new Date().getDate();
+  const installDate = state.installDate || today;
+  const installMonth = installDate.slice(0, 7);
+  const todayDayNum = new Date().getDate();
+  let startDayNum = 1;
+  if (installMonth === currentMonth) {
+    startDayNum = Number.parseInt(installDate.slice(8, 10), 10);
+  }
+  const daysInMonth = Math.max(1, todayDayNum - startDayNum + 1);
   const monthPossible = daysInMonth * 5;
   const monthPercent =
     monthPossible > 0 ? Math.round((monthTotal / monthPossible) * 100) : 0;
@@ -238,7 +252,7 @@ export function AnalysisCircles({ state }: AnalysisCirclesProps) {
           </div>
         </div>
 
-        {/* Nafil */}
+        {/* Nafil -- with color dots */}
         <div className="flex flex-col items-center gap-1">
           <Ring
             size={80}
@@ -246,7 +260,7 @@ export function AnalysisCircles({ state }: AnalysisCirclesProps) {
             color="#7c3aed"
             label={`Nafil: ${nafilDone} of 4`}
           >
-            <div className="flex flex-col items-center">
+            <div className="flex flex-col items-center gap-1">
               <span
                 className="text-sm font-bold"
                 style={{
@@ -256,6 +270,27 @@ export function AnalysisCircles({ state }: AnalysisCirclesProps) {
               >
                 {nafilDone}/4
               </span>
+              {/* Color dots for each nafil */}
+              <div className="flex gap-1">
+                {NAFIL_NAMES.map((n) => {
+                  const done =
+                    advancedPrayers[n] && advancedPrayers[n] !== "unmarked";
+                  return (
+                    <div
+                      key={n}
+                      title={n}
+                      style={{
+                        width: "7px",
+                        height: "7px",
+                        borderRadius: "50%",
+                        background: done ? NAFIL_COLORS[n] : "transparent",
+                        border: `1.5px solid ${NAFIL_COLORS[n]}`,
+                        transition: "background 0.3s ease",
+                      }}
+                    />
+                  );
+                })}
+              </div>
             </div>
           </Ring>
           <p
